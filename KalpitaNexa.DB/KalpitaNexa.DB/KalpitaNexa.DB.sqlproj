@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Name>KalpitaNexa.DB</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>4.1</ProjectVersion>
+    <ProjectGuid>{eb6a260f-da95-417c-97d6-6cf9137f66c9}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql160DatabaseSchemaProvider</DSP>
+    <OutputType>Database</OutputType>
+    <RootPath>
+    </RootPath>
+    <RootNamespace>KalpitaNexa.DB</RootNamespace>
+    <AssemblyName>KalpitaNexa.DB</AssemblyName>
+    <ModelCollation>1033, CI</ModelCollation>
+    <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
+    <DeployToDatabase>True</DeployToDatabase>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetLanguage>CS</TargetLanguage>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SqlServerVerification>False</SqlServerVerification>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <!-- Default to the v11.0 targets path if the targets file for the current VS version is not found -->
+    <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
+    <VisualStudioVersion Condition="'$(SSDTExists)' == ''">11.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Condition="'$(SQLDBExtensionsRefPath)' != ''" Project="$(SQLDBExtensionsRefPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <Import Condition="'$(SQLDBExtensionsRefPath)' == ''" Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <ItemGroup>
+    <Folder Include="Properties" />
+    <Folder Include="dbo\" />
+    <Folder Include="dbo\Tables\" />
+    <Folder Include="Security\" />
+    <Folder Include="dbo\Stored Procedures\" />
+    <Folder Include="dbo\User Defined Types\" />
+    <Folder Include="Storage\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="dbo\Tables\UserSettings.sql" />
+    <Build Include="dbo\Tables\Users.sql" />
+    <Build Include="dbo\Tables\UserRoles.sql" />
+    <Build Include="dbo\Tables\UserOtps.sql" />
+    <Build Include="dbo\Tables\UserApplication.sql" />
+    <Build Include="dbo\Tables\Tenants.sql" />
+    <Build Include="dbo\Tables\TenantFeatureMapping.sql" />
+    <Build Include="dbo\Tables\TenantApplication.sql" />
+    <Build Include="dbo\Tables\Tags.sql" />
+    <Build Include="dbo\Tables\Roles.sql" />
+    <Build Include="dbo\Tables\RoleFeatures.sql" />
+    <Build Include="dbo\Tables\PublicPromptApprovals.sql" />
+    <Build Include="dbo\Tables\Model.sql" />
+    <Build Include="dbo\Tables\Languages.sql" />
+    <Build Include="dbo\Tables\Files.sql" />
+    <Build Include="dbo\Tables\Features.sql" />
+    <Build Include="dbo\Tables\DataSources.sql" />
+    <Build Include="dbo\Tables\Configurations.sql" />
+    <Build Include="dbo\Tables\ChatTags.sql" />
+    <Build Include="dbo\Tables\Chats.sql" />
+    <Build Include="dbo\Tables\ApplicationSettings.sql" />
+    <Build Include="dbo\Tables\ApplicationRoles.sql" />
+    <Build Include="dbo\Tables\ApplicationModels.sql" />
+    <Build Include="dbo\Tables\ApplicationLanguages.sql" />
+    <Build Include="dbo\Tables\ApplicationDataSources.sql" />
+    <Build Include="dbo\Tables\ApplicationConfigurations.sql" />
+    <Build Include="dbo\Tables\Application.sql" />
+    <Build Include="dbo\Stored Procedures\spVerifyOtpAndResetPassword.sql" />
+    <Build Include="dbo\Stored Procedures\spUserUpdateSelfProfile.sql" />
+    <Build Include="dbo\Stored Procedures\spUploadFile.sql" />
+    <Build Include="dbo\Stored Procedures\spUpdateUserPassword.sql" />
+    <Build Include="dbo\Stored Procedures\spUpdateUserAndAssignments.sql" />
+    <Build Include="dbo\Stored Procedures\spUpdatePromptMessage.sql" />
+    <Build Include="dbo\Stored Procedures\spUpdateMessageFeedback.sql" />
+    <Build Include="dbo\Stored Procedures\spUpdateApplicationSettings.sql" />
+    <Build Include="dbo\Stored Procedures\spSoftDeleteUser.sql" />
+    <Build Include="dbo\Stored Procedures\spSoftDeleteRoleById.sql" />
+    <Build Include="dbo\Stored Procedures\spRequestPublicApproval.sql" />
+    <Build Include="dbo\Stored Procedures\spProcessPublicApproval.sql" />
+    <Build Include="dbo\Stored Procedures\spInsertMessage.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserTenants.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserTaggedChats.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserSettings.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUsersByTenant.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserRoles.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserProfile.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserPermissions.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserInfoOnAuthentication.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserDetailsByEmail.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserDefaults.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserCreditInfo.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserChatHistory.sql" />
+    <Build Include="dbo\Stored Procedures\spGetUserByEmailForSso.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTenantUsers.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTenantsWithApplications.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTenants.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTenantFeatures.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTenantDetailsById.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTenantAdmins.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTenantAdminDetails.sql" />
+    <Build Include="dbo\Stored Procedures\spGetTaggedChats.sql" />
+    <Build Include="dbo\Stored Procedures\spGetRolesWithFeaturesByTenant.sql" />
+    <Build Include="dbo\Stored Procedures\spGetPromptPublicMessages .sql" />
+    <Build Include="dbo\Stored Procedures\spGetPromptManagerMessages.sql" />
+    <Build Include="dbo\Stored Procedures\spGetPendingPublicApprovals.sql" />
+    <Build Include="dbo\Stored Procedures\spGetModelsByAppId.sql" />
+    <Build Include="dbo\Stored Procedures\spGetModels.sql" />
+    <Build Include="dbo\Stored Procedures\spGetLanguagesByAppId.sql" />
+    <Build Include="dbo\Stored Procedures\spGetLanguages.sql" />
+    <Build Include="dbo\Stored Procedures\spGetFilteredPromptMessages.sql" />
+    <Build Include="dbo\Stored Procedures\spGetFeatures.sql" />
+    <Build Include="dbo\Stored Procedures\spGetFavoriteChats.sql" />
+    <Build Include="dbo\Stored Procedures\spGetDataSources.sql" />
+    <Build Include="dbo\Stored Procedures\spGetApplicationSettings.sql" />
+    <Build Include="dbo\Stored Procedures\spGetApplicationsAndDataSourcesByTenant.sql" />
+    <Build Include="dbo\Stored Procedures\spGetApplications.sql" />
+    <Build Include="dbo\Stored Procedures\spGetAllRoles.sql" />
+    <Build Include="dbo\Stored Procedures\spGetAllApplicationsWithSettings.sql" />
+    <Build Include="dbo\Stored Procedures\spGenerateAndStoreOtpForUser.sql" />
+    <Build Include="dbo\Stored Procedures\spDeleteUserChatHistoryForApp.sql" />
+    <Build Include="dbo\Stored Procedures\spDeleteTenantAdmin.sql" />
+    <Build Include="dbo\Stored Procedures\spDeleteTenant.sql" />
+    <Build Include="dbo\Stored Procedures\spDeletePromptMessage.sql" />
+    <Build Include="dbo\Stored Procedures\spCreateUserAndAssignToTenant.sql" />
+    <Build Include="dbo\Stored Procedures\spCheckAndRefreshCreditsOnLogin.sql" />
+    <Build Include="dbo\Stored Procedures\GetRoleFeatures.sql" />
+    <Build Include="dbo\User Defined Types\NameList.sql" />
+    <Build Include="dbo\User Defined Types\IdList.sql" />
+    <Build Include="Security\Vinuthan.bhat%40kalpitatechnologies.com.sql" />
+    <Build Include="Security\Vaishnavi.Mohan%40kalpitatechnologies.com.sql" />
+    <Build Include="Security\Sayan.Dutta%40kalpitatechnologies.com.sql" />
+    <Build Include="Security\Pravalika.Konidala%40kalpitatechnologies.com.sql" />
+    <Build Include="Security\Madhan.Kumar%40kalpitatechnologies.com.sql" />
+    <Build Include="Security\KalpitaNexaAPI-Dev.sql" />
+    <Build Include="Security\RoleMemberships.sql" />
+    <Build Include="dbo\Stored Procedures\spUpsertUsers.sql" />
+    <Build Include="dbo\Stored Procedures\spUpsertTenantFeatures.sql" />
+    <Build Include="dbo\Stored Procedures\spUpsertTenant.sql" />
+    <Build Include="dbo\Stored Procedures\spUpsertRoleWithFeatures.sql" />
+    <Build Include="dbo\Stored Procedures\spUpsertDataSource.sql" />
+    <Build Include="dbo\Stored Procedures\spUpsertApplication.sql" />
+    <Build Include="dbo\Stored Procedures\spUpdateUserPreference.sql" />
+    <Build Include="dbo\Stored Procedures\spUpdateDefaultUserSettings.sql" />
+    <Build Include="dbo\Stored Procedures\spSoftDeleteApplication.sql" />
+    <Build Include="dbo\Stored Procedures\spResetApplicationSettings.sql" />
+    <Build Include="dbo\Stored Procedures\spDeleteDataSource.sql" />
+    <Build Include="Storage\pf_Users_Year.sql" />
+    <Build Include="Storage\pf_CreatedYearMonthDay.sql" />
+    <Build Include="Storage\ps_Users_Year.sql" />
+    <Build Include="Storage\ps_CreatedYearMonthDay.sql" />
+    <Build Include="dbo\Stored Procedures\spCreateSuperAdmin.sql" />
+  </ItemGroup>
+</Project>

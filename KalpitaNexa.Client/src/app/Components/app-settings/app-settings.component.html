@@ -1,0 +1,306 @@
+<!-- src/app/components/app-settings/app-settings.component.html -->
+
+<div class="page-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-left">
+            <div class="header-icon" style="background: linear-gradient(135deg, #0891b2 0%, #0d9488 100%);">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                    </path>
+                </svg>
+            </div>
+            <div>
+                <h2 class="header-title">Application Settings</h2>
+                <p class="header-subtitle">Centrally manage settings for all applications in the system.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Body -->
+    <div class="page-content">
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoading">
+            <div class="loading-spinner"></div>
+            <p>Loading All Applications...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" *ngIf="showErrorMessage && !isLoading">
+            <p>{{ errorMessage }}</p>
+        </div>
+
+        <!-- Applications Table -->
+        <div class="grid-container" *ngIf="!isLoading && !showErrorMessage">
+            <table class="grid-table">
+                <thead>
+                    <tr>
+                        <th>Application & Assigned Settings</th>
+                        <!-- <th>Tenant</th> -->
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let app of applications">
+                        <td>
+                            <!-- Application Name -->
+                            <div class="app-name">{{ app.application_name }}</div>
+                            <!-- Assigned Settings Tags -->
+                            <div class="settings-tags-container">
+                                <!-- Languages -->
+                                <div *ngIf="app.assigned_languages" class="setting-tag language"
+                                    [title]="'Languages: ' + app.assigned_languages">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z" />
+                                    </svg>
+                                    <span>Languages</span>
+                                </div>
+                                <!-- Models -->
+                                <div *ngIf="app.assigned_models" class="setting-tag model"
+                                    [title]="'Models: ' + app.assigned_models">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM18 14H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
+                                    </svg>
+                                    <span>Models</span>
+                                </div>
+                                <!-- Data Sources -->
+                                <div *ngIf="app.assigned_data_sources" class="setting-tag datasource"
+                                    [title]="'Data Sources: ' + app.assigned_data_sources">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z" />
+                                    </svg>
+                                    <span>Data Sources</span>
+                                </div>
+                            </div>
+                        </td>
+                        <!-- <td>{{ app.tenant_name }}</td> -->
+                        <td>
+                            <span class="status-badge" [ngClass]="app.is_active ? 'active' : 'inactive'">
+                                {{ app.is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn primary" (click)="openManageSettingsModal(app)">
+                                Manage
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" *ngIf="applications.length === 0 && !isLoading">
+                <h4>No Applications Found</h4>
+                <p>There are no applications configured in the system yet.</p>
+            </div>
+        </div>
+        <tbody>
+            <tr *ngFor="let app of paginatedApplications">
+            </tr>
+        </tbody>
+
+        <div class="pagination-controls" *ngIf="applications.length > 0">
+            <div class="pagination-info">
+                Showing {{ (currentPage - 1) * pageSize + 1 }} -
+                {{ (currentPage * pageSize) > applications.length ? applications.length : (currentPage * pageSize) }}
+                of {{ applications.length }} applications
+            </div>
+            <div class="pagination-actions">
+                <button class="page-btn" [disabled]="currentPage === 1" (click)="setPage(currentPage - 1)">
+                    Previous
+                </button>
+                <button class="page-btn" [disabled]="currentPage === totalPages" (click)="setPage(currentPage + 1)">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!-- MANAGE SETTINGS MODAL -->
+<!-- ======================================================= -->
+<div class="modal-overlay" *ngIf="isSettingsModalOpen" >
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <header class="modal-header">
+            <div *ngIf="selectedAppForEditing">
+                <h3>Manage Settings for "{{ selectedAppForEditing.application_name }}"</h3>
+                <p>Select the languages, models, and data sources this app can access.</p>
+            </div>
+            <button class="close-btn" (click)="closeManageSettingsModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12z" />
+                </svg>
+            </button>
+        </header>
+
+        <!-- Body -->
+        <div class="modal-body">
+            <!-- Loading State -->
+            <div *ngIf="isModalLoading" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>Loading Settings...</p>
+            </div>
+
+            <!-- Error State -->
+            <div *ngIf="modalErrorMessage && !isModalLoading" class="error-state">
+                <p>{{ modalErrorMessage }}</p>
+            </div>
+
+            <!-- Settings Content -->
+            <!-- REPLACE the "Settings Content" div in the modal -->
+            <div *ngIf="!isModalLoading && !modalErrorMessage" class="settings-content">
+                <!-- Languages Section -->
+                <div class="form-section">
+                    <h4>Languages</h4>
+                    <div class="multiselect-container">
+                        <button class="multiselect-trigger" (click)="toggleDropdown('language')">
+                            <span>{{ getSelectedItemsText('language') }}</span>
+                            <svg class="multiselect-caret" [class.open]="isLanguagesDropdownOpen" width="16" height="16"
+                                viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z" />
+                            </svg>
+                        </button>
+                        <div class="multiselect-options" *ngIf="isLanguagesDropdownOpen">
+                            <!-- FIX: "Select All" is a single label OUTSIDE the loop -->
+                            <label class="checkbox-label select-all-label">
+                                <input type="checkbox" [checked]="areAllSelected('language')"
+                                    (change)="toggleSelectAll('language')">
+                                <span class="checkmark"></span>
+                                <span>All</span>
+                            </label>
+                            <!-- FIX: The loop now only contains the individual items -->
+                            <label *ngFor="let lang of allLanguages" class="checkbox-label">
+                                <input type="checkbox" [checked]="isItemSelected(lang.id, selectedLanguageIds)"
+                                    (change)="toggleSelection(lang.id, selectedLanguageIds)">
+                                <span class="checkmark"></span>
+                                <span>{{ lang.name }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Models Section -->
+                <div class="form-section">
+                    <h4>LLM Models</h4>
+                    <div class="multiselect-container">
+                        <button class="multiselect-trigger" (click)="toggleDropdown('model')">
+                            <span>{{ getSelectedItemsText('model') }}</span>
+                            <svg class="multiselect-caret" [class.open]="isModelsDropdownOpen" width="16" height="16"
+                                viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z" />
+                            </svg>
+                        </button>
+                        <div class="multiselect-options" *ngIf="isModelsDropdownOpen">
+                            <!-- FIX: "Select All" is a single label OUTSIDE the loop -->
+                            <label class="checkbox-label select-all-label">
+                                <input type="checkbox" [checked]="areAllSelected('model')"
+                                    (change)="toggleSelectAll('model')">
+                                <span class="checkmark"></span>
+                                <span>All</span>
+                            </label>
+                            <!-- FIX: The loop now only contains the individual items -->
+                            <label *ngFor="let model of allModels" class="checkbox-label">
+                                <input type="checkbox" [checked]="isItemSelected(model.id, selectedModelIds)"
+                                    (change)="toggleSelection(model.id, selectedModelIds)">
+                                <span class="checkmark"></span>
+                                <span>{{ model.name }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Sources Section -->
+                <div class="form-section">
+                    <h4>Data Sources</h4>
+                    <div class="multiselect-container">
+                        <button class="multiselect-trigger" (click)="toggleDropdown('dataSource')">
+                            <span>{{ getSelectedItemsText('dataSource') }}</span>
+                            <svg class="multiselect-caret" [class.open]="isDataSourcesDropdownOpen" width="16"
+                                height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z" />
+                            </svg>
+                        </button>
+
+                        <div class="multiselect-options" *ngIf="isDataSourcesDropdownOpen">
+                            <label class="checkbox-label select-all-label">
+                                <input type="checkbox" [checked]="areAllSelected('dataSource')"
+                                    (change)="toggleSelectAll('dataSource')">
+                                <span class="checkmark"></span>
+                                <span>All</span>
+                            </label>
+
+                            <label *ngFor="let source of allDataSources" class="checkbox-label">
+                                <input type="checkbox" [checked]="isItemSelected(source.id, selectedDataSourceIds)"
+                                    (change)="toggleSelection(source.id, selectedDataSourceIds)">
+                                <span class="checkmark"></span>
+                                <span>{{ source.name }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================================================= -->
+                <!-- === START: NEW SECTION FOR GENERAL SETTINGS === -->
+                <!-- ======================================================= -->
+                <div class="form-section">
+                    <h4>General Settings</h4>
+                    <div class="input-grid">
+                        <!-- Free Credits -->
+                        <div class="form-group">
+                            <label for="monthlyCredits" class="form-label">Credits per user : </label>
+                            <!-- <<< CHANGED input 'id' and '[(ngModel)]' -->
+                            <input id="monthlyCredits" type="number" class="form-input" [(ngModel)]="monthlyCredits"
+                                placeholder="Enter monthly credits">
+                        </div>
+                        <!-- Tokens Per Credit -->
+                        <div class="form-group">
+                            <label for="tokensPerCredit" class="form-label">Tokens Per Credit : </label>
+                            <input id="tokensPerCredit" type="number" class="form-input" [(ngModel)]="tokensPerCredit"
+                                placeholder="Enter tokens per credit">
+                        </div>
+                        <!-- Chat History -->
+                        <div class="form-group">
+                            <label for="chatHistory" class="form-label">Chat History (Days) : </label>
+                            <input id="chatHistory" type="number" class="form-input" [(ngModel)]="chatHistoryInDays"
+                                placeholder="Enter number of days" step="1" min="0"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value < 0) this.value = 0;"
+                                onkeydown="if(['-','+','e','E','.'].includes(event.key)) event.preventDefault();">
+                        </div>
+                        <!-- XScore -->
+                        <div class="form-group">
+                            <label for="xScore" class="form-label">ConfidenceScore : </label>
+                            <input id="xScore" type="number" class="form-input" [(ngModel)]="xScore"
+                                placeholder="Enter score value" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer / Actions -->
+        <footer class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeManageSettingsModal()"
+                [disabled]="isSubmitting">Cancel</button>
+            <button class="btn btn-primary" (click)="saveSettings()" [disabled]="isSubmitting || isModalLoading">
+                <div *ngIf="isSubmitting" class="inline-spinner"></div>
+                {{ isSubmitting ? 'Saving...' : 'Save' }}
+            </button>
+        </footer>
+    </div>
+</div>
+
+<!-- Success Toast -->
+<div class="success-toast" [class.show]="showSuccessToast">
+    {{ successMessage }}
+</div>

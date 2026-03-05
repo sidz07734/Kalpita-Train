@@ -1,0 +1,117 @@
+<p>create-tenant works!</p>
+<div class="modal-overlay">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h3 class="modal-title">Create New Tenant</h3>
+      <button type="button" class="modal-close-btn" (click)="closeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <div *ngIf="isLoading" class="loading-state">
+        <!-- Add a spinner or loading text here -->
+        Loading...
+      </div>
+
+      <form [formGroup]="createTenantForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+        <!-- Tenant Name -->
+        <div class="form-group">
+          <label for="tenantName" class="form-label">Tenant Name <span class="required">*</span></label>
+          <input id="tenantName" type="text" class="form-input" formControlName="tenantName"
+            placeholder="Enter new tenant name">
+          <div *ngIf="createTenantForm.get('tenantName')?.invalid && createTenantForm.get('tenantName')?.touched"
+            class="error-message">
+            <span *ngIf="createTenantForm.get('tenantName')?.errors?.['required']">Tenant name is required.</span>
+            <span *ngIf="createTenantForm.get('tenantName')?.errors?.['minlength']">Tenant name must be at least 3
+              characters.</span>
+            <span *ngIf="createTenantForm.get('tenantName')?.errors?.['pattern']">Tenant name should only contain
+              letters and spaces (no numbers or special characters).</span>
+          </div>
+        </div>
+
+        <!-- Applications Dropdown -->
+        <div class="form-group">
+          <label class="form-label">Assign Applications</label>
+          <div class="dropdown-container">
+            <div class="dropdown-trigger" (click)="toggleAppsDropdown()" [class.active]="isAppsDropdownOpen">
+              <span>{{ selectedAppsText }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="dropdown-menu" [class.show]="isAppsDropdownOpen">
+              <div formArrayName="applications" class="roles-list">
+                <label class="role-checkbox" for="select-all-apps">
+                  <input type="checkbox" id="select-all-features" [checked]="allFeaturesSelected"
+  (change)="toggleAllFeatures($event)">
+                  <span class="checkmark"></span>
+                  <span class="role-name">All</span>
+                </label>
+                <div *ngFor="let app of allApplications; let i = index" class="role-item">
+                  <label class="role-checkbox" [for]="'app-' + app.app_id">
+                    <input type="checkbox" [formControlName]="i" [id]="'app-' + app.app_id">
+                    <span class="checkmark"></span>
+                    <span class="role-name">{{ app.application_name }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features Dropdown -->
+        <div class="form-group">
+          <label class="form-label">Assign Features</label>
+          <div class="dropdown-container">
+            <div class="dropdown-trigger" (click)="toggleFeaturesDropdown()" [class.active]="isFeaturesDropdownOpen">
+              <span>{{ selectedFeaturesText }}</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="dropdown-menu" [class.show]="isFeaturesDropdownOpen">
+              <div formArrayName="features" class="roles-list">
+                <div class="role-item">
+                  <label class="role-checkbox" for="select-all-features">
+                    <input type="checkbox" id="select-all-features" [checked]="allFeaturesSelected"
+                      (change)="toggleAllFeatures($event)">
+                    <span class="checkmark"></span>
+                    <span class="role-name">All</span>
+                  </label>
+                </div>
+                <div *ngFor="let feature of allFeatures; let i = index" class="role-item">
+  <label class="role-checkbox" [for]="'feature-' + feature.FeatureId">
+    <input type="checkbox" [formControlName]="i" [id]="'feature-' + feature.FeatureId">
+    <span class="checkmark"></span>
+    <span class="role-name">{{ feature.FeatureName }}</span>
+  </label>
+</div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error Display -->
+        <div *ngIf="error" class="alert alert-error">
+          {{ error }}
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="isSaving">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="createTenantForm.invalid || isSaving">
+            <span *ngIf="!isSaving">Save</span>
+            <span *ngIf="isSaving">Saving...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

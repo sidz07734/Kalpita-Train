@@ -1,0 +1,285 @@
+<!-- admin-panel.component.html -->
+<div class="question-manager-overlay" *ngIf="isOpen" (click)="closePanel()">
+  <div class="question-manager-container" [ngClass]="{'dark-theme': isDarkTheme}" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="question-manager-header">
+      <div class="header-left">
+        <div class="header-icon" style="background-color: #ff9800;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M12 20.94c1.5 0 2.75 1.06 4 1.56 1.25.5 2.5 1.5 2.5 1.5s-1-1.25-1.5-2.5c-.5-1.25-1.56-4-1.56-4H8.06c0 0-1.06 2.75-1.56 4-.5 1.25-1.5 2.5-1.5 2.5s1.25-1 2.5-1.5c1.25-.5 2.5-1.56 4-1.56zM12 12c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0 0v-2" />
+          </svg>
+        </div>
+        <h2 class="header-title">Settings & Permissions</h2>
+      </div>
+      <div class="header-actions">
+        <button class="close-btn" (click)="closePanel()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="question-manager-body">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <h3 class="section-title">Management</h3>
+          <ul class="category-list">
+            <li class="category-item" [ngClass]="{'active': activeSection === 'users'}"
+              (click)="selectSection('users')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span class="category-name">Users</span>
+            </li>
+            <li class="category-item" [ngClass]="{'active': activeSection === 'roles'}"
+              (click)="selectSection('roles')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span class="category-name">Roles</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Users Section -->
+        <div *ngIf="activeSection === 'users'" class="content-wrapper">
+          <div class="section-top-bar">
+            <div class="content-title-section">
+              <h3 class="content-title">User Management</h3>
+              <p class="content-subtitle">View and manage users for your tenant.</p>
+            </div>
+            <button *ngIf="canManageSettingsAndRoles" class="add-item-btn" (click)="openCreateUserModal()">+ Add
+              User</button>
+          </div>
+
+          <div class="content-body">
+            <div class="loading-state" *ngIf="isLoading">
+              <div class="loading-spinner"></div>
+              <p>Loading Users...</p>
+            </div>
+
+            <div class="error-state" *ngIf="error">
+              <p>{{ error }}</p>
+            </div>
+
+            <div class="user-grid-container" *ngIf="!isLoading && !error">
+              <div class="table-wrapper">
+                <table class="user-grid-table">
+                  <thead>
+                    <tr>
+                      <th class="actions-column">Actions</th>
+                      <th>User Name</th>
+                      <th>Email Address</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Created On</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let user of users">
+                      <td class="actions-column">
+                        <div class="actions-container">
+                          <button class="action-btn edit-btn" (click)="openEditUserModal(user)" title="Edit User">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
+                          <button class="action-btn delete-btn" (click)="openDeleteUserModal(user)" title="Delete User">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2">
+                              <polyline points="3,6 5,6 21,6"></polyline>
+                              <path
+                                d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2">
+                              </path>
+                              <line x1="10" y1="11" x2="10" y2="17"></line>
+                              <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                      <td>{{ user.UserName }}</td>
+                      <td>{{ user.UserEmail }}</td>
+                      <td><span class="role-badge">{{ user.RoleName }}</span></td>
+                      <td>
+                        <span class="status-badge" [ngClass]="user.IsActive ? 'active' : 'inactive'">
+                          {{ user.IsActive ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td>{{ user.CreatedOn | date:'medium' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="empty-state" *ngIf="users.length === 0">
+                <h4>No Users Found</h4>
+                <p>There are no users to display for this tenant.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Roles Section -->
+        <div *ngIf="activeSection === 'roles'">
+          <div class="section-top-bar">
+            <div class="content-title-section">
+              <h3 class="content-title">Role Management</h3>
+              <p class="content-subtitle">View and manage roles for your tenant.</p>
+            </div>
+            <button class="add-item-btn" (click)="onAddRole()">+ Add Role</button>
+          </div>
+
+          <div class="content-body">
+            <div class="loading-state" *ngIf="isLoading">
+              <div class="loading-spinner"></div>
+              <p>Loading Roles...</p>
+            </div>
+
+            <div class="error-state" *ngIf="error">
+              <p>{{ error }}</p>
+            </div>
+
+            <div class="user-grid-container" *ngIf="!isLoading && !error">
+              <div class="table-wrapper">
+                <table class="user-grid-table">
+                  <thead>
+                    <tr>
+                      <th class="actions-column">Actions</th>
+                      <th>Role Name</th>
+                      <th>Features</th>
+                      <th>Status</th>
+                      <th>Created On</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let role of roles">
+                      <td class="actions-column">
+                        <div class="actions-container">
+                          <button class="action-btn edit-btn" (click)="onEditRole(role)" title="Edit Role">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7">
+                              </path>
+                              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
+                          <button class="action-btn delete-btn" (click)="openDeleteRoleModal(role)" title="Delete Role">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                              stroke-width="2">
+                              <polyline points="3,6 5,6 21,6"></polyline>
+                              <path
+                                d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2">
+                              </path>
+                              <line x1="10" y1="11" x2="10" y2="17"></line>
+                              <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                      <td>{{ role.role_name }}</td>
+                      <td>{{ role.features ? role.features.join(', ') : 'No features assigned' }}
+                      </td>
+                      <td>
+                        <span class="status-badge" [ngClass]="role.is_active ? 'active' : 'inactive'">
+                          {{ role.is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </td>
+                      <td>{{ role.created_on | date:'medium' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="empty-state" *ngIf="roles.length === 0">
+                <h4>No Roles Found</h4>
+                <p>There are no roles to display for this tenant.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals and Notifications -->
+
+<!-- Delete Role Modal -->
+<div class="modal-overlay" *ngIf="showDeleteRoleModal" (click)="closeDeleteRoleModal()">
+  <div class="delete-modal-container" [ngClass]="{'dark-theme': isDarkTheme}" (click)="$event.stopPropagation()">
+    <div class="delete-modal-header">
+      <div class="delete-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3,6 5,6 21,6"></polyline>
+          <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+          <line x1="10" y1="11" x2="10" y2="17"></line>
+          <line x1="14" y1="11" x2="14" y2="17"></line>
+        </svg>
+      </div>
+      <h3 class="delete-modal-title">Delete Role</h3>
+      <p class="delete-modal-message">
+        Are you sure you want to delete the role <strong>"{{ roleToDelete?.role_name }}"</strong>?
+        This action cannot be undone.
+      </p>
+    </div>
+    <div class="delete-modal-actions">
+      <button class="cancel-btn" (click)="closeDeleteRoleModal()" [disabled]="isDeletingRole">Cancel</button>
+      <button class="confirm-delete-btn" (click)="confirmDeleteRole()" [disabled]="isDeletingRole">
+        <span *ngIf="!isDeletingRole">Delete Role</span>
+        <span *ngIf="isDeletingRole" class="deleting-text">
+          <div class="small-spinner"></div> Deleting...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal-overlay" *ngIf="showDeleteUserModal" (click)="closeDeleteUserModal()">
+  <div class="delete-modal-container" (click)="$event.stopPropagation()">
+    <div class="delete-modal-header">
+      <h3 class="delete-modal-title">Delete User</h3>
+      <p class="delete-modal-message">
+        Are you sure you want to delete the user <strong>"{{ userToDelete?.UserName }}"</strong>? This action cannot be undone.
+      </p>
+    </div>
+    <div *ngIf="error" class="error-message" style="margin: 0 24px 24px;">{{error}}</div>
+    <div class="delete-modal-actions">
+      <button class="cancel-btn" (click)="closeDeleteUserModal()" [disabled]="isDeleting">Cancel</button>
+      <button class="confirm-delete-btn" (click)="confirmDeleteUser()" [disabled]="isDeleting">
+        <span *ngIf="!isDeleting">Delete User</span>
+        <span *ngIf="isDeleting" class="deleting-text">
+          <div class="small-spinner"></div> Deleting...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Component Modals for Create/Edit -->
+<app-create-role-by-tenant *ngIf="showCreateRoleModal" (close)="closeCreateRoleModal()"
+  (roleCreated)="onRoleCreated()"></app-create-role-by-tenant>
+<app-edit-role-by-tenant *ngIf="showEditRoleModal && selectedRole" [roleData]="selectedRole"
+  (close)="closeEditRoleModal()" (roleUpdated)="onRoleUpdated()"></app-edit-role-by-tenant>
+<app-create-user *ngIf="showCreateUserModal" (close)="closeCreateUserModal()"
+  (userCreated)="onUserCreated()"></app-create-user>
+<app-edit-user *ngIf="showEditUserModal && selectedUserForEdit" [userData]="selectedUserForEdit"
+  (close)="closeEditUserModal()" (userUpdated)="onUserUpdated()"></app-edit-user>
+
+<!-- Toast Notification -->
+<div class="toast-notification" [ngClass]="{'show': showToast}">
+  <div class="toast-content" [ngClass]="isErrorToast ? 'error' : 'success'">
+    <span>{{ toastMessage }}</span>
+  </div>
+</div>

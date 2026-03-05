@@ -1,0 +1,39 @@
+<div class="chart-container" [ngClass]="{'dark-theme': isDarkTheme}">
+  <!-- Chart header with title and maximize button aligned -->
+  <div class="chart-header">
+    <h3 class="chart-title">{{ chartData.title || 'Chart' }}</h3>
+    
+    <!-- Your custom maximize icon button - only show when not maximized -->
+    <button class="maximize-btn" 
+            *ngIf="!isMaximized" 
+            (click)="openMaximizedChart(chartData)" 
+            title="Maximize Chart">
+      <svg class="maximize-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <!-- Outer rounded rectangle -->
+        <rect x="3" y="3" width="18" height="18" rx="3" ry="3" stroke="currentColor" stroke-width="2" fill="none"/>
+        <!-- Arrow pointing to top-right -->
+        <path d="M15 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 9h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Chart canvas - only clickable for maximization when not already maximized -->
+  <canvas #chartCanvas 
+          class="chart-canvas" 
+          [style.cursor]="!isMaximized ? 'pointer' : 'default'"
+          (click)="!isMaximized && openMaximizedChart(chartData)"></canvas>
+
+  <p class="chart-description" *ngIf="chartData.description">
+    {{ chartData.description }}
+  </p>
+
+  <div class="chart-insights" *ngIf="chartData.insights && chartData.insights.length > 0">
+    <h4>Key Insights:</h4>
+    <ul>
+      <li *ngFor="let insight of chartData.insights">{{ insight }}</li>
+    </ul>
+  </div>
+
+  <button class="download-btn" (click)="downloadChart()">Download Chart</button>
+</div>

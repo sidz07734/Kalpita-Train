@@ -1,0 +1,65 @@
+.maximized-chart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.maximized-chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.maximized-chart {
+  width: 100%;
+  max-width: 800px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 0.1px;
+  right: 5px;
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #dc2626;
+}
+
+/* Dark theme styles */
+.dark-theme .maximized-chart-container {
+  background: #1f2937;
+}
+
+.dark-theme .close-btn {
+  background: #b91c1c;
+}
+
+.dark-theme .close-btn:hover {
+  background: #991b1b;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

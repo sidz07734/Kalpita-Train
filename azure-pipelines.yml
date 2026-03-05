@@ -1,0 +1,152 @@
+# Azure Pipeline for KalpitaNexa Client (Angular) - Dev & Prod
+# File: client-pipeline.yml
+
+trigger: none
+pr: none
+
+name: KalpitaNexa-Client-$(Date:yyyyMMdd)$(Rev:.r)
+
+pool:
+  vmImage: 'windows-2022'
+
+variables:
+  # Updated Folder Name
+  projectFolder: 'KalpitaNexa.Client'
+  
+  # Updated Resource Group
+  resourceGroupName: 'KalpitaNexa'
+  
+  # App Service Names (For reference or future Deployment stages)
+  devAppName: 'KalpitaNexaClient-Dev'
+  prodAppName: 'KalpitaNexaClient'
+
+stages:
+- stage: BuildAndPackage
+  displayName: 'Build and Package Angular App'
+  jobs:
+  - job: BuildClient
+    displayName: 'Build Dev and Prod'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+      displayName: 'Install Node.js'
+
+    - task: PowerShell@2
+      displayName: 'Install Angular CLI'
+      inputs:
+        targetType: 'inline'
+        script: |
+          npm install -g @angular/cli@19 --force
+          Write-Host "Angular CLI version:"
+          ng version
+
+    # --------------------------------------------------------
+    # 1. PREPARE & BUILD FOR DEV
+    # --------------------------------------------------------
+    - task: PowerShell@2
+      displayName: 'Install Dependencies & Build (DEV)'
+      inputs:
+        targetType: 'inline'
+        script: |
+          cd $(projectFolder)
+          Write-Host "Installing dependencies..."
+          npm install --legacy-peer-deps --force
+
+          Write-Host "Building application for DEV..."
+          # Increases memory for the build process
+          $env:NODE_OPTIONS="--max_old_space_size=8192"
+          
+          # Builds using environment.dev.ts
+          ng build --configuration development --verbose
+          
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "Dev Build Failed"
+              exit 1
+          }
+
+    - task: PowerShell@2
+      displayName: 'Stage Artifacts (DEV)'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $outputPath = "$(projectFolder)/dist/chatbot"
+          $stagingPath = "$(Build.ArtifactStagingDirectory)/Client_Dev"
+
+          # Ensure staging is clean
+          if (Test-Path $stagingPath) { Remove-Item -Recurse -Force $stagingPath }
+          New-Item -ItemType Directory -Force -Path $stagingPath
+
+          Write-Host "Copying Dev Build to Staging..."
+          if (Test-Path $outputPath) {
+              Copy-Item -Path "$outputPath/*" -Destination $stagingPath -Recurse -Force
+          } else {
+              Write-Error "Build output directory not found at $outputPath"
+              exit 1
+          }
+
+          # Copy web.config if it exists
+          if (Test-Path "$(projectFolder)/src/web.config") {
+              Copy-Item -Path "$(projectFolder)/src/web.config" -Destination "$stagingPath/web.config" -Force
+          }
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Dev Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/Client_Dev'
+        ArtifactName: 'ClientApp-Dev'
+        publishLocation: 'Container'
+
+    # --------------------------------------------------------
+    # 2. BUILD FOR PRODUCTION
+    # --------------------------------------------------------
+    - task: PowerShell@2
+      displayName: 'Build (PRODUCTION)'
+      inputs:
+        targetType: 'inline'
+        script: |
+          cd $(projectFolder)
+          
+          # No need to npm install again, node_modules exists from previous step
+          
+          Write-Host "Building application for PRODUCTION..."
+          $env:NODE_OPTIONS="--max_old_space_size=8192"
+          
+          # Builds using environment.prod.ts
+          ng build --configuration production --verbose
+
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "Production Build Failed"
+              exit 1
+          }
+
+    - task: PowerShell@2
+      displayName: 'Stage Artifacts (PRODUCTION)'
+      inputs:
+        targetType: 'inline'
+        script: |
+          $outputPath = "$(projectFolder)/dist/chatbot"
+          $stagingPath = "$(Build.ArtifactStagingDirectory)/Client_Prod"
+
+          # Ensure staging is clean
+          if (Test-Path $stagingPath) { Remove-Item -Recurse -Force $stagingPath }
+          New-Item -ItemType Directory -Force -Path $stagingPath
+
+          Write-Host "Copying Prod Build to Staging..."
+          if (Test-Path $outputPath) {
+              Copy-Item -Path "$outputPath/*" -Destination $stagingPath -Recurse -Force
+          } else {
+              Write-Error "Build output directory not found at $outputPath"
+              exit 1
+          }
+
+          if (Test-Path "$(projectFolder)/src/web.config") {
+              Copy-Item -Path "$(projectFolder)/src/web.config" -Destination "$stagingPath/web.config" -Force
+          }
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Prod Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/Client_Prod'
+        ArtifactName: 'ClientApp-Prod'
+        publishLocation: 'Container'

@@ -1,0 +1,95 @@
+
+<div class="dashboard-container" [ngClass]="{'dark-theme': isDarkTheme}">
+  <!-- Modified Dashboard Header -->
+  <div class="dashboard-header">
+    <h2 class="dashboard-title">Analytics Dashboard</h2>
+    <div class="header-right">
+      <button class="action-btn download-btn">
+        <i class="fas fa-download"></i>
+        Download
+      </button>
+      <button class="close-dashboard-btn" (click)="closeDashboard()" title="Close Dashboard">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Two-Column Content Area -->
+  <div class="dashboard-main-content">
+    
+    <!-- Left Sidebar: Sheet Chat & Prompt Input -->
+    <div class="dashboard-sidebar">
+      <div class="sheet-chat-container">
+        <h3 class="sidebar-title">Sheet chat</h3>
+        <div class="prompt-list">
+          <div class="prompt-item" *ngFor="let prompt of sheetChatPrompts">
+            {{ prompt }}
+          </div>
+        </div>
+      </div>
+      <div class="prompt-input-area">
+        <textarea #promptInput 
+                  class="prompt-textarea"
+                  placeholder="Ask Question or regenerate with the new prompt.." 
+                  [(ngModel)]="inputMessage"
+                  (keyup)="handlePromptKeyUp($event)"></textarea>
+        <div class="prompt-actions">
+          <div class="prompt-icons">
+      
+            <span class="char-counter">{{ inputMessage.length }}/1000</span>
+          </div>
+          <button class="send-prompt-btn" (click)="sendNewPrompt()" [disabled]="!inputMessage.trim()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Content: Dashboard Grid -->
+    <div class="dashboard-content">
+      <!-- Loading State -->
+      <div class="dashboard-loading" *ngIf="isLoading">
+        <!-- Your existing loading state HTML -->
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <h3>Generating Dashboard...</h3>
+          <p>{{ loadingStage }}</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div class="dashboard-error" *ngIf="hasError && !isLoading">
+        <!-- Your existing error state HTML -->
+        <div class="error-content">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Dashboard Generation Failed</h3>
+          <p>{{ errorMessage }}</p>
+          <button class="retry-btn" (click)="retryDashboard()">Retry</button>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid" *ngIf="!isLoading && !hasError && visibleCharts.length > 0" [ngClass]="getDynamicGridClass()">
+        <!-- Your existing *ngFor loop for chart items -->
+        <div *ngFor="let chartItem of visibleCharts; let i = index; trackBy: trackByChartId" class="chart-grid-item" [ngClass]="getChartItemClass(i)">
+          <!-- Successful Chart -->
+          <div class="chart-container" *ngIf="chartItem.success">
+            <div class="chart-header">
+              <h4 class="chart-title">{{ chartItem.chart_data.title }}</h4>
+            </div>
+            <div class="chart-content">
+              <app-chart [chartData]="chartItem.chart_data" [isDarkTheme]="isDarkTheme" [isMaximized]="false" (maximizeChart)="onMaximizeChart($event)"></app-chart>
+            </div>
+          </div>
+          <!-- Failed Chart Placeholder -->
+          <div class="chart-error-placeholder" *ngIf="!chartItem.success">
+            <div class="error-placeholder-content">
+              <h4>Chart Failed</h4>
+              <p>{{ chartItem.error || 'Unknown error' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

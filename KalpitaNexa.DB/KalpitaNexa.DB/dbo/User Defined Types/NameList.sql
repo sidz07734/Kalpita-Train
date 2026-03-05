@@ -1,0 +1,4 @@
+﻿CREATE TYPE [dbo].[NameList] AS TABLE (
+    [Name] NVARCHAR (255) NOT NULL,
+    PRIMARY KEY CLUSTERED ([Name] ASC));
+

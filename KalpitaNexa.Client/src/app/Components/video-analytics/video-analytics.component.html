@@ -1,0 +1,262 @@
+<!-- video-analytics.component.html -->
+<!-- Place at: KalpitaNexa.Client/src/app/Components/video-analytics/video-analytics.component.html -->
+
+<div class="va-container" [ngClass]="{'dark-theme': isDarkTheme}">
+
+  <!-- Header -->
+  <div class="va-header">
+    <div>
+      <h3 class="va-title">Video Analytics</h3>
+      <p class="va-subtitle">Training videos and quiz results</p>
+    </div>
+    <button class="va-refresh-btn"
+      (click)="activeTab === 'videos' ? loadStatuses() : loadQuizResults()"
+      [disabled]="isLoading || isLoadingQuiz">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" [ngClass]="{'spin': isLoading || isLoadingQuiz}">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="va-tabs">
+    <button class="va-tab" [class.active]="activeTab === 'videos'" (click)="switchTab('videos')">
+      📹 Videos
+    </button>
+    <button class="va-tab" [class.active]="activeTab === 'quiz'" (click)="switchTab('quiz')">
+      📊 Quiz Results
+    </button>
+  </div>
+
+  <!-- ==================== VIDEOS TAB ==================== -->
+  <ng-container *ngIf="activeTab === 'videos'">
+
+    <!-- Loading -->
+    <div class="va-loading" *ngIf="isLoading">
+      <div class="va-spinner"></div>
+      <p>Loading training statuses from SharePoint...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="va-error" *ngIf="error && !isLoading">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ error }}</span>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="va-stats" *ngIf="!isLoading && !error && folders.length > 0">
+      <div class="va-stat-card">
+        <span class="va-stat-number">{{ folders.length }}</span>
+        <span class="va-stat-label">Total Videos</span>
+      </div>
+      <div class="va-stat-card processed">
+        <span class="va-stat-number">{{ processedCount }}</span>
+        <span class="va-stat-label">Processed</span>
+      </div>
+      <div class="va-stat-card pending">
+        <span class="va-stat-number">{{ folders.length - processedCount }}</span>
+        <span class="va-stat-label">Pending</span>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="va-table-wrapper" *ngIf="!isLoading && !error && folders.length > 0">
+      <table class="va-table">
+        <thead>
+          <tr>
+            <th>Folder / Video Name</th>
+            <th>Summary</th>
+            <th>Q&amp;A</th>
+            <th>Audio</th>
+            <th>Phase 1</th>
+            <th>Processed At</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let folder of folders">
+            <td class="va-folder-name">{{ folder.day_folder_name }}</td>
+
+            <td>
+              <span class="va-badge" [ngClass]="folder.summary_exists ? 'badge-yes' : 'badge-no'">
+                {{ folder.summary_exists ? '✓ Done' : '✗ Missing' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="va-badge" [ngClass]="folder.qa_exists ? 'badge-yes' : 'badge-no'">
+                {{ folder.qa_exists ? '✓ Done' : '✗ Missing' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="va-badge" [ngClass]="folder.audio_exists ? 'badge-yes' : 'badge-no'">
+                {{ folder.audio_exists ? '🔊 Done' : '✗ Missing' }}
+              </span>
+            </td>
+
+            <td>
+              <span class="va-badge" [ngClass]="folder.phase1_completed ? 'badge-yes' : 'badge-pending'">
+                {{ folder.phase1_completed ? '✓ Complete' : '⏳ Pending' }}
+              </span>
+            </td>
+
+            <td class="va-date">
+              {{ folder.processed_at ? formatDate(folder.processed_at) : '—' }}
+            </td>
+
+            <!-- Actions -->
+            <td class="va-actions-cell">
+              <div class="va-actions">
+
+                <!-- Generate Summary -->
+                <div class="va-action-group">
+                  <button
+                    class="va-action-btn btn-summary"
+                    [disabled]="getActionState(folder.day_folder_name).summary === 'loading'"
+                    (click)="generateSummary(folder)">
+                    <span *ngIf="getActionState(folder.day_folder_name).summary !== 'loading'">
+                      📄 Summary
+                    </span>
+                    <span *ngIf="getActionState(folder.day_folder_name).summary === 'loading'" class="va-btn-loading">
+                      <span class="va-btn-spinner"></span> Generating...
+                    </span>
+                  </button>
+                  <span class="va-action-msg"
+                    *ngIf="getActionState(folder.day_folder_name).summaryMessage"
+                    [ngClass]="{
+                      'msg-success':  getActionState(folder.day_folder_name).summary === 'success',
+                      'msg-error':    getActionState(folder.day_folder_name).summary === 'error',
+                      'msg-info':     getActionState(folder.day_folder_name).summary === 'already_exists'
+                    }">
+                    {{ getActionState(folder.day_folder_name).summaryMessage }}
+                  </span>
+                </div>
+
+                <!-- Generate Q&A -->
+                <div class="va-action-group">
+                  <button
+                    class="va-action-btn btn-qa"
+                    [disabled]="getActionState(folder.day_folder_name).qa === 'loading'"
+                    (click)="generateQA(folder)">
+                    <span *ngIf="getActionState(folder.day_folder_name).qa !== 'loading'">
+                      ❓ Q&amp;A
+                    </span>
+                    <span *ngIf="getActionState(folder.day_folder_name).qa === 'loading'" class="va-btn-loading">
+                      <span class="va-btn-spinner"></span> Generating...
+                    </span>
+                  </button>
+                  <span class="va-action-msg"
+                    *ngIf="getActionState(folder.day_folder_name).qaMessage"
+                    [ngClass]="{
+                      'msg-success':  getActionState(folder.day_folder_name).qa === 'success',
+                      'msg-error':    getActionState(folder.day_folder_name).qa === 'error',
+                      'msg-info':     getActionState(folder.day_folder_name).qa === 'already_exists'
+                    }">
+                    {{ getActionState(folder.day_folder_name).qaMessage }}
+                  </span>
+                </div>
+                <!-- Generate Audio -->
+              <div class="va-action-group">
+                <button
+                  class="va-action-btn btn-audio"
+                  [disabled]="getActionState(folder.day_folder_name).audio === 'loading'"
+                  (click)="generateAudio(folder)">
+                  <span *ngIf="getActionState(folder.day_folder_name).audio !== 'loading'">
+                    🔊 Audio
+                  </span>
+                  <span *ngIf="getActionState(folder.day_folder_name).audio === 'loading'" class="va-btn-loading">
+                    <span class="va-btn-spinner"></span> Generating...
+                  </span>
+                </button>
+                <span class="va-action-msg"
+                  *ngIf="getActionState(folder.day_folder_name).audioMessage"
+                  [ngClass]="{
+                    'msg-success': getActionState(folder.day_folder_name).audio === 'success',
+                    'msg-error':   getActionState(folder.day_folder_name).audio === 'error',
+                    'msg-info':    getActionState(folder.day_folder_name).audio === 'already_exists'
+                  }">
+                  {{ getActionState(folder.day_folder_name).audioMessage }}
+                </span>
+              </div>
+                 
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty -->
+    <div class="va-empty" *ngIf="!isLoading && !error && folders.length === 0">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <p>No training folders found in SharePoint.</p>
+    </div>
+
+  </ng-container>
+
+  <!-- ==================== QUIZ RESULTS TAB ==================== -->
+  <ng-container *ngIf="activeTab === 'quiz'">
+
+    <!-- Loading -->
+    <div class="va-loading" *ngIf="isLoadingQuiz">
+      <div class="va-spinner"></div>
+      <p>Loading quiz results...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="va-error" *ngIf="quizError && !isLoadingQuiz">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ quizError }}</span>
+    </div>
+
+    <!-- Table -->
+    <div class="va-table-wrapper" *ngIf="!isLoadingQuiz && !quizError && quizResults.length > 0">
+      <table class="va-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>User Email</th>
+            <th>Topic</th>
+            <th>Score</th>
+            <th>Date Taken</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of quizResults; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ r.user_email }}</td>
+            <td>{{ r.topic }}</td>
+            <td>
+              <span class="va-badge" [ngClass]="(r.score / r.total_questions) >= 0.7 ? 'badge-yes' : 'badge-no'">
+                {{ r.score }} / {{ r.total_questions }}
+              </span>
+            </td>
+            <td class="va-date">{{ formatQuizDate(r.taken_at) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty -->
+    <div class="va-empty" *ngIf="!isLoadingQuiz && !quizError && quizResults.length === 0">
+      <p>No quiz results found.</p>
+    </div>
+
+  </ng-container>
+
+</div>
