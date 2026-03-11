@@ -1,0 +1,140 @@
+.chart-container {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  max-width: 300px;
+}
+
+.chart-canvas {
+  max-height: 250px !important;
+  width: 100% !important;
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.chart-description {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 8px 0;
+}
+
+.chart-insights {
+  margin-top: 8px;
+}
+
+.chart-insights h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 4px 0;
+}
+
+.chart-insights ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.chart-insights li {
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.download-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: #1DBA9D;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover {
+  background: #17a589;
+}
+
+/* Maximize button styles - Updated with your specific icon */
+.maximize-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.maximize-btn:hover {
+  background: rgba(29, 186, 157, 0.1);
+}
+
+.maximize-icon {
+  width: 18px;
+  height: 18px;
+  fill: #374151;
+  transition: fill 0.2s ease;
+}
+
+.maximize-btn:hover .maximize-icon {
+  fill: #1DBA9D;
+}
+
+/* Chart header section to align title and maximize button */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.chart-header .chart-title {
+  margin: 0;
+  flex: 1;
+}
+
+/* Dark theme styles */
+.dark-theme .chart-container {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.dark-theme .chart-title {
+  color: #f3f4f6;
+}
+
+.dark-theme .chart-description {
+  color: #d1d5db;
+}
+
+.dark-theme .chart-insights h4 {
+  color: #f3f4f6;
+}
+
+.dark-theme .chart-insights li {
+  color: #d1d5db;
+}
+
+.dark-theme .maximize-icon {
+  fill: #f3f4f6;
+}
+
+.dark-theme .maximize-btn:hover .maximize-icon {
+  fill: #1DBA9D;
+}
+
+.dark-theme .maximize-btn:hover {
+  background: rgba(29, 186, 157, 0.2);
+}

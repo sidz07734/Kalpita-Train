@@ -1,0 +1,151 @@
+ <!-- <div class="template-selection-overlay" [ngClass]="{'dark-theme': isDarkTheme}">
+      <div class="template-selection-modal">
+        <div class="modal-header">
+          <h3>Choose Dashboard Template</h3>
+          <button class="close-btn" (click)="onCancel()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="modal-content">
+          <p class="selection-prompt">I found multiple chart requests in your query. Which template would you prefer?</p>
+          
+          <div class="template-options">
+            <div 
+              *ngFor="let template of templates" 
+              class="template-card"
+              [class.selected]="selectedTemplate?.id === template.id"
+              (click)="selectTemplate(template)">
+              
+              <div class="template-preview">
+                <div class="preview-grid" [ngClass]="'grid-' + template.id">
+                  <div *ngFor="let chart of template.charts" 
+                       class="preview-chart" 
+                       [ngClass]="'chart-' + chart.type">
+                    <span class="chart-icon">
+                      <i class="fas" [ngClass]="{
+                        'fa-chart-bar': chart.type === 'bar',
+                        'fa-chart-pie': chart.type === 'pie',
+                        'fa-chart-line': chart.type === 'line',
+                        'fa-table': chart.type === 'table'
+                      }"></i>
+                    </span>
+                    <small>{{chart.title}}</small>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="template-info">
+                <h4>{{template.name}}</h4>
+                <p>{{template.description}}</p>
+                <div class="template-specs">
+                  <span class="spec-badge">{{template.layout}}</span>
+                  <span class="spec-badge">{{template.charts.length}} Components</span>
+                </div>
+              </div>
+              
+              <div class="selection-indicator" *ngIf="selectedTemplate?.id === template.id">
+                <i class="fas fa-check-circle"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button class="btn-secondary" (click)="onCancel()">
+              Cancel
+            </button>
+            <button class="btn-primary" 
+                    [disabled]="!selectedTemplate" 
+                    (click)="onConfirm()">
+              Use {{selectedTemplate?.name || 'Template'}}
+            </button>
+            <button class="btn-dynamic" (click)="useDynamicDashboard()">
+              Use Dynamic Dashboard Instead
+            </button>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+
+
+
+
+
+
+
+
+
+    <div class="template-selection-overlay" [ngClass]="{'dark-theme': isDarkTheme}">
+  <div class="template-selection-modal">
+    <div class="modal-header">
+      <h3>Choose Dashboard Template</h3>
+      <button class="close-btn" (click)="onCancel()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-content">
+      <p class="selection-prompt">I found multiple chart requests in your query. Which template would you prefer?</p>
+      
+      <div class="template-options">
+        <div 
+          *ngFor="let template of templates" 
+          class="template-card"
+          [class.selected]="selectedTemplate?.id === template.id"
+          (click)="selectTemplate(template)">
+          
+          <div class="template-preview">
+            <div class="preview-grid" [ngClass]="'grid-' + template.id">
+              <div *ngFor="let chart of template.charts" 
+                   class="preview-chart" 
+                   [ngClass]="'chart-' + chart.type">
+                <span class="chart-icon">
+                  <i class="fas" [ngClass]="{
+                    'fa-chart-bar': chart.type === 'bar',
+                    'fa-chart-pie': chart.type === 'pie',
+                    'fa-chart-line': chart.type === 'line',
+                    'fa-table': chart.type === 'table'
+                  }"></i>
+                </span>
+                <small>{{chart.title}}</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="template-info">
+            <h4>{{template.name}}</h4>
+            <p>{{template.description}}</p>
+            <div class="template-specs">
+              <span class="spec-badge">{{template.layout}}</span>
+              <span class="spec-badge">{{template.charts.length}} Components</span>
+            </div>
+          </div>
+          
+          <div class="selection-indicator" *ngIf="selectedTemplate?.id === template.id">
+            <i class="fas fa-check-circle"></i>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Redesigned action buttons section -->
+      <div class="action-buttons-container">
+        <div class="left-actions">
+          <button class="btn-auto-generate" (click)="useDynamicDashboard()">
+            <i class="fas fa-magic"></i> Auto Generate
+          </button>
+        </div>
+        <div class="right-actions">
+          <button class="btn-cancel" (click)="onCancel()">
+            Cancel
+          </button>
+          <button class="btn-ok" 
+                  [disabled]="!selectedTemplate" 
+                  (click)="onConfirm()">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

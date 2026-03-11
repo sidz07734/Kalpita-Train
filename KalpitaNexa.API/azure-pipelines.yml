@@ -1,0 +1,93 @@
+trigger:
+
+  branches:
+
+    include:
+
+      - '*'
+ 
+pool:
+
+  vmImage: 'ubuntu-latest'
+ 
+variables:
+
+  artifactName: 'app_package'
+ 
+steps:
+
+# 1️⃣ Use Python 3.11
+
+- task: UsePythonVersion@0
+
+  inputs:
+
+    versionSpec: '3.11'
+ 
+# 2️⃣ Build your Python package
+
+- script: |
+
+    cd KalpitaAgent.API
+
+    python -m pip install --upgrade pip setuptools wheel build
+
+    python setup.py sdist bdist_wheel
+
+    pip install uvicorn
+
+  displayName: 'Build Python Package'
+ 
+# 3️⃣ Prepare deployment folder (ensure requirements.txt included)
+
+- script: |
+
+    mkdir -p $(Build.ArtifactStagingDirectory)/app
+
+    cp KalpitaAgent.API/main.py $(Build.ArtifactStagingDirectory)/app/
+
+    cp KalpitaAgent.API/setup.py $(Build.ArtifactStagingDirectory)/app/
+
+    cp KalpitaAgent.API/startup.sh $(Build.ArtifactStagingDirectory)/app/
+
+    cp KalpitaAgent.API/requirements.txt $(Build.ArtifactStagingDirectory)/app/
+
+    cp KalpitaAgent.API/dist/*.tar.gz $(Build.ArtifactStagingDirectory)/app/
+
+    ls -l $(Build.ArtifactStagingDirectory)/app
+
+  displayName: 'Copy app files for deployment'
+ 
+# 4️⃣ Create deployable ZIP (App Service will unzip automatically)
+
+- task: ArchiveFiles@2
+
+  inputs:
+
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/app'
+
+    includeRootFolder: false
+
+    archiveType: zip
+
+    archiveFile: '$(Build.ArtifactStagingDirectory)/app_package.zip'
+
+    replaceExistingArchive: true
+
+  displayName: 'Create deployment ZIP'
+ 
+# 5️⃣ Publish ZIP artifact
+
+- task: PublishBuildArtifacts@1
+
+  inputs:
+
+    pathToPublish: '$(Build.ArtifactStagingDirectory)/app_package.zip'
+
+    artifactName: '$(artifactName)'
+
+    publishLocation: 'Container'
+
+  displayName: 'Publish build artifact'
+
+ 

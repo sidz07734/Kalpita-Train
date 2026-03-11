@@ -1,0 +1,106 @@
+<!-- Main "Create New User" Modal -->
+<div class="modal-overlay">
+  <div class="modal-container" [ngClass]="{'dark-theme': isDarkTheme}" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Create New User</h3>
+      <button type="button" class="modal-close-btn" (click)="closeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="createUserForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="appName" class="form-label">Application</label>
+          <input id="appName" type="text" class="form-input" formControlName="appName">
+        </div>
+        <div class="form-group">
+          <label for="userName" class="form-label">User Name <span class="required">*</span></label>
+          <input id="userName" type="text" class="form-input" formControlName="userName" placeholder="Enter full name">
+
+          <div *ngIf="createUserForm.get('userName')?.touched && createUserForm.get('userName')?.invalid"
+            class="error-message">
+            <div *ngIf="createUserForm.get('userName')?.errors?.['required']">User name is required.</div>
+            <div *ngIf="createUserForm.get('userName')?.errors?.['minlength']">User name must be at least 3 characters.
+            </div>
+            <div *ngIf="createUserForm.get('userName')?.errors?.['pattern']">Special characters are not allowed.</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="userEmail" class="form-label">Email Address <span class="required">*</span></label>
+          <input id="userEmail" type="email" class="form-input" formControlName="userEmail"
+            placeholder="Enter email address">
+          <div *ngIf="createUserForm.get('userEmail')?.touched && createUserForm.get('userEmail')?.invalid"
+            class="error-message">
+            <div *ngIf="createUserForm.get('userEmail')?.errors?.['required']">Email address is required.</div>
+            <div *ngIf="createUserForm.get('userEmail')?.errors?.['pattern']">Please enter a valid email (e.g.,
+              user@example.com).</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assign Roles <span class="required">*</span></label>
+          <div *ngIf="isLoading" class="form-input loading-placeholder">Loading roles...</div>
+          <div *ngIf="!isLoading" class="dropdown-container">
+            <div class="dropdown-trigger" (click)="toggleRolesDropdown()" [class.active]="isRolesDropdownOpen">
+              <span>{{ selectedRolesText }}</span>
+              <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div class="dropdown-menu" [class.show]="isRolesDropdownOpen" (click)="$event.stopPropagation()">
+              <div formArrayName="roles" class="roles-list">
+                <div *ngFor="let role of roles; let i = index" class="role-item">
+                  <label class="role-checkbox" [for]="'role-' + role.role_id">
+                    <input type="checkbox" [formControlName]="i" [id]="'role-' + role.role_id">
+                    <span class="checkmark"></span>
+                    <span class="role-name">{{ role.role_name }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="createUserForm.get('roles')?.invalid && createUserForm.get('roles')?.touched"
+            class="error-message">
+            Please select at least one role.
+          </div>
+        </div>
+        <div *ngIf="error" class="alert alert-error">
+          {{ error }}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="createUserForm.invalid || isSaving">
+            <span *ngIf="!isSaving">Save</span>
+            <span *ngIf="isSaving">Saving...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================= -->
+<!-- == NEW REACTIVATION CONFIRMATION POPUP == -->
+<!-- ============================================= -->
+<div class="modal-overlay" *ngIf="showReactivationPrompt">
+  <div class="confirmation-modal-container" [ngClass]="{'dark-theme': isDarkTheme}" (click)="$event.stopPropagation()">
+    <div class="confirmation-modal-header">
+      <h3 class="confirmation-modal-title">Confirm Reactivation</h3>
+    </div>
+    <div class="confirmation-modal-body">
+      <p>{{ reactivationMessage }}</p>
+    </div>
+    <div class="confirmation-modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="cancelReactivation()" [disabled]="isReactivating">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-primary" (click)="confirmReactivation()" [disabled]="isReactivating">
+        <span *ngIf="!isReactivating">Reactivate</span>
+        <span *ngIf="isReactivating">Reactivating...</span>
+      </button>
+    </div>
+  </div>
+</div>

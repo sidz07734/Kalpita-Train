@@ -1,0 +1,6 @@
+<div class="maximized-chart-overlay" (click)="closeMaximizedChart()">
+  <div class="maximized-chart-container" (click)="$event.stopPropagation()">
+    <app-chart [chartData]="chartData" [isMaximized]="true" class="maximized-chart"></app-chart>
+    <button class="close-btn" (click)="closeMaximizedChart()">Close</button>
+  </div>
+</div>

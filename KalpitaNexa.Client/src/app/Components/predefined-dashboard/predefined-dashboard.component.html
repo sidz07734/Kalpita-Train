@@ -1,0 +1,179 @@
+  <div class="predefined-dashboard-overlay" (click)="onOverlayClick($event)">
+    <div class="predefined-dashboard-container" [ngClass]="{'dark-theme': isDarkTheme}" (click)="$event.stopPropagation()">
+      <!-- Dashboard Header -->
+      <div class="dashboard-header">
+        <h2 class="dashboard-title">{{selectedTemplate.name}} Dashboard</h2>
+        <div class="header-right">
+          <div class="dashboard-stats" *ngIf="!isLoading && !hasError">
+            <span class="stats-item">
+              <i class="fas fa-chart-bar"></i>
+              {{ successfulCharts }}/{{ totalCharts }} Components
+            </span>
+            <span class="stats-item template-info">
+              <i class="fas fa-layer-group"></i>
+              {{ selectedTemplate.layout }}
+            </span>
+          </div>
+          <button class="close-dashboard-btn" (click)="closeDashboard()" title="Close Dashboard">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable content area -->
+      <div class="dashboard-content">
+        <!-- Loading State -->
+        <div class="dashboard-loading" *ngIf="isLoading">
+          <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>Generating {{ selectedTemplate.name }}...</h3>
+            <p>Creating {{totalCharts}} components for your predefined template</p>
+            <div class="loading-progress">
+              <div class="progress-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div class="dashboard-error" *ngIf="hasError && !isLoading">
+          <div class="error-content">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Template Generation Failed</h3>
+            <p>{{ errorMessage }}</p>
+            <button class="retry-btn" (click)="retryDashboard()">
+              <i class="fas fa-redo"></i>
+              Retry Template
+            </button>
+          </div>
+        </div>
+
+        <!-- Predefined Template Grid -->
+        <div class="predefined-grid" 
+             *ngIf="!isLoading && !hasError && dashboardData.length > 0"
+             [ngClass]="getTemplateGridClass()">
+          
+          <!-- Mixed Template (2x2 Grid) -->
+          <ng-container *ngIf="selectedTemplate.id === 'mixed'">
+            <div class="grid-item bar-chart-item">
+              <ng-container *ngTemplateOutlet="chartTemplate; context: { data: getChartByType('bar') }"></ng-container>
+            </div>
+            <div class="grid-item pie-chart-item">
+              <ng-container *ngTemplateOutlet="chartTemplate; context: { data: getChartByType('pie') }"></ng-container>
+            </div>
+            <div class="grid-item line-chart-item">
+              <ng-container *ngTemplateOutlet="chartTemplate; context: { data: getChartByType('line') }"></ng-container>
+            </div>
+            <div class="grid-item table-item">
+              <ng-container *ngTemplateOutlet="tableTemplate; context: { data: getTableData() }"></ng-container>
+            </div>
+          </ng-container>
+
+          <!-- Analytics Template (3x2 Grid) -->
+          <ng-container *ngIf="selectedTemplate.id === 'analytics'">
+            <div class="grid-item primary-chart">
+              <ng-container *ngTemplateOutlet="chartTemplate; context: { data: getChartByType('bar') }"></ng-container>
+            </div>
+            <div class="grid-item secondary-chart">
+              <ng-container *ngTemplateOutlet="chartTemplate; context: { data: getChartByType('pie') }"></ng-container>
+            </div>
+            <div class="grid-item data-table">
+              <ng-container *ngTemplateOutlet="tableTemplate; context: { data: getTableData() }"></ng-container>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Dashboard Footer -->
+        <div class="dashboard-footer" *ngIf="!isLoading && !hasError && dashboardData.length > 0">
+          <div class="footer-info">
+            <span class="generated-time">
+              <i class="fas fa-clock"></i>
+              Generated: {{ getCurrentTime() | date:'medium' }}
+            </span>
+            <span class="template-used">
+              <i class="fas fa-layer-group"></i>
+              Template: {{ selectedTemplate.name }}
+            </span>
+            <div class="footer-actions">
+              <button class="action-btn" (click)="downloadTemplate()">
+                <i class="fas fa-download"></i>
+                Download Template
+              </button>
+              <button class="refresh-dashboard-btn" (click)="retryDashboard()">
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart Template -->
+  <ng-template #chartTemplate let-data="data">
+    <div class="component-container" *ngIf="data">
+      <div class="component-header" *ngIf="data.success">
+        <h4 class="component-title">{{ data.chart_data?.title || 'Chart' }}</h4>
+        <span class="chart-type-badge" [ngClass]="'badge-' + data.chart_type">
+          {{ data.chart_type.toUpperCase() }}
+        </span>
+      </div>
+      
+      <!-- Successful Chart -->
+      <div class="chart-content" *ngIf="data.success && data.chart_data">
+        <app-chart 
+          [chartData]="data.chart_data"
+          [isDarkTheme]="isDarkTheme"
+          [isMaximized]="false"
+          (maximizeChart)="onMaximizeChart($event)">
+        </app-chart>
+      </div>
+
+      <!-- Failed Chart Placeholder -->
+      <div class="component-error-placeholder" *ngIf="!data.success">
+        <div class="error-placeholder-content">
+          <i class="fas fa-chart-line-down"></i>
+          <h4>{{ data.chart_type.toUpperCase() }} Chart Unavailable</h4>
+          <p>{{ data.error || 'No data available' }}</p>
+          <small>Query: {{ data.original_query }}</small>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Table Template -->
+  <ng-template #tableTemplate let-data="data">
+    <div class="component-container">
+      <div class="component-header">
+        <h4 class="component-title">Data Table</h4>
+        <span class="chart-type-badge badge-table">TABLE</span>
+      </div>
+      
+      <div class="table-content" *ngIf="data?.table_data; else noTableData">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th *ngFor="let header of data.table_data.headers">{{ header }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of data.table_data.rows">
+                <td *ngFor="let cell of row">{{ cell }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <ng-template #noTableData>
+        <div class="component-error-placeholder">
+          <div class="error-placeholder-content">
+            <i class="fas fa-table"></i>
+            <h4>Data Table Unavailable</h4>
+            <p>No structured data available for table display</p>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </ng-template>
