@@ -1,0 +1,133 @@
+<!-- 1. MODAL ONLY: Shown before anything else is generated -->
+<ng-container *ngIf="showLayoutModal">
+  <div class="modal-overlay">
+    <div class="layout-modal" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header-custom">
+        <h3>Select Layout Template</h3>
+        <button class="close-dashboard-btn" (click)="closeDashboard()" title="Cancel">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <p style="color: #666; font-size: 14px; margin-bottom: 20px;">
+        Choose how you want to visualize: "{{dashboardQuery | slice:0:50}}..."
+      </p>
+      
+      <div class="layout-grid">
+        <div *ngFor="let l of availableLayouts" (click)="selectLayout(l)" class="layout-card">
+          <div class="layout-icon-wrapper" [innerHTML]="l.iconSvg"></div>
+          <p style="margin: 0; font-weight: 500;">{{l.name}}</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ng-container>
+
+<!-- 2. DASHBOARD CONTAINER: Hidden completely until a layout is selected -->
+<div class="dashboard-container" [ngClass]="{'dark-theme': isDarkTheme}" *ngIf="!showLayoutModal && hasSelectedTemplate">
+  
+  <div class="dashboard-header">
+    <div class="header-left">
+      <button class="sidebar-toggle-btn" (click)="toggleSidebar()" [title]="isSidebarOpen ? 'Close Chat' : 'Open Chat'">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h2 class="dashboard-title">Analytics Dashboard</h2>
+    </div>
+    
+    <div class="header-right">
+      <button class="close-dashboard-btn" (click)="closeDashboard()" title="Close Dashboard">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="dashboard-main-content">
+    
+    <!-- Sidebar -->
+    <div class="dashboard-sidebar" [class.collapsed]="!isSidebarOpen">
+      <div class="sheet-chat-container">
+        <h3 class="sidebar-title">Sheet chat</h3>
+        <div class="prompt-list">
+          <div class="prompt-item" *ngFor="let prompt of sheetChatPrompts">
+            {{ prompt }}
+          </div>
+        </div>
+      </div>
+      <div class="prompt-input-area">
+        <textarea #promptInput class="prompt-textarea" 
+          placeholder="Ask Question or regenerate..."
+          [(ngModel)]="inputMessage" 
+          (keyup)="handlePromptKeyUp($event)"></textarea>
+        <div class="prompt-actions">
+          <span class="char-counter">{{ inputMessage.length }}/1000</span>
+          <button class="send-prompt-btn" (click)="sendNewPrompt()" [disabled]="!inputMessage.trim()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Content -->
+    <div class="dashboard-content">
+      
+      <!-- Loading State -->
+      <div class="dashboard-loading" *ngIf="isLoading">
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <h3>Generating Analytics...</h3>
+          <p>{{ loadingStage }}</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div class="dashboard-error" *ngIf="hasError && !isLoading">
+        <div class="error-content">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Generation Failed</h3>
+          <p>{{ errorMessage }}</p>
+          <button class="retry-btn" (click)="retryDashboard()">Retry</button>
+        </div>
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="dashboard-grid" 
+           *ngIf="!isLoading && !hasError && visibleCharts.length > 0"
+           [ngClass]="selectedLayoutClass">
+
+        <div *ngFor="let chartItem of visibleCharts; let i = index; trackBy: trackByChartId" 
+             class="chart-grid-item"
+             [ngClass]="getChartItemClass(i)">
+
+          <!-- Success Case -->
+          <div class="chart-container" *ngIf="chartItem.success">
+            <div class="chart-header">
+              <h4 class="chart-title">{{ chartItem.chart_data.title }}</h4>
+            </div>
+            <div class="chart-content">
+              <app-chart 
+                [chartData]="chartItem.chart_data" 
+                [isDarkTheme]="isDarkTheme" 
+                [isMaximized]="false"
+                [colorPalette]="selectedPalette"
+                (maximizeChart)="onMaximizeChart($event)">
+              </app-chart>
+            </div>
+          </div>
+
+          <!-- Failure Case -->
+          <div class="chart-error-placeholder" *ngIf="!chartItem.success">
+            <div class="error-placeholder-content">
+              <i class="fas fa-chart-bar" style="opacity: 0.3; font-size: 30px; margin-bottom: 10px;"></i>
+              <h4 style="margin: 0;">No Data Available</h4>
+              <p style="font-size: 12px; margin-top: 5px;">{{ chartItem.error || 'Could not generate visualization' }}</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

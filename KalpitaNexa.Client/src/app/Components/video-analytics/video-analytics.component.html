@@ -1,0 +1,423 @@
+<!-- video-analytics.component.html -->
+<!-- Place at: KalpitaNexa.Client/src/app/Components/video-analytics/video-analytics.component.html -->
+
+<div class="va-container" [ngClass]="{'dark-theme': isDarkTheme}">
+
+  <!-- Header -->
+  <div class="va-header">
+    <div>
+      <h3 class="va-title">Video Analytics</h3>
+      <p class="va-subtitle">Training videos and quiz results</p>
+    </div>
+    <button class="va-refresh-btn"
+      (click)="activeTab === 'videos' ? loadStatuses() : activeTab === 'quiz' ? loadQuizResults() : null"
+      [disabled]="isLoading || isLoadingQuiz || isLoadingContent">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" [ngClass]="{'spin': isLoading || isLoadingQuiz || isLoadingContent}">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="va-tabs">
+    <button class="va-tab" [class.active]="activeTab === 'videos'" (click)="switchTab('videos')">
+      📹 Videos
+    </button>
+    <button class="va-tab" [class.active]="activeTab === 'quiz'" (click)="switchTab('quiz')">
+      📊 Quiz Results
+    </button>
+    <button class="va-tab" [class.active]="activeTab === 'content'" (click)="switchTab('content')">
+      📂 Content Viewer
+    </button>
+  </div>
+
+  <!-- ==================== VIDEOS TAB ==================== -->
+  <ng-container *ngIf="activeTab === 'videos'">
+
+    <!-- Loading -->
+    <div class="va-loading" *ngIf="isLoading">
+      <div class="va-spinner"></div>
+      <p>Loading training statuses from SharePoint...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="va-error" *ngIf="error && !isLoading">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ error }}</span>
+    </div>
+
+    <ng-container *ngIf="!isLoading && !error && folders.length > 0">
+
+      <!-- Stats Summary -->
+      <div class="va-stats">
+        <div class="va-stat-card">
+          <span class="va-stat-number">{{ folders.length }}</span>
+          <span class="va-stat-label">Total Videos</span>
+        </div>
+        <div class="va-stat-card processed">
+          <span class="va-stat-number">{{ processedCount }}</span>
+          <span class="va-stat-label">Processed</span>
+        </div>
+        <div class="va-stat-card pending">
+          <span class="va-stat-number">{{ folders.length - processedCount }}</span>
+          <span class="va-stat-label">Pending</span>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="va-filters">
+
+        <select class="va-filter-select" #dateSelect (change)="onDateFilterChange(dateSelect.value)">
+          <option value="all">All Time</option>
+          <option value="1week">Last 1 Week</option>
+          <option value="1month">Last 1 Month</option>
+          <option value="6months">Last 6 Months</option>
+          <option value="1year">Last 1 Year</option>
+          <option value="custom">Custom Range</option>
+        </select>
+
+        <ng-container *ngIf="showCustomDateRange">
+          <input type="date" class="va-filter-input" (change)="onStartDateChange($event)" />
+          <span class="va-filter-sep">to</span>
+          <input type="date" class="va-filter-input" (change)="onEndDateChange($event)" />
+          <button class="va-filter-apply-btn" (click)="applyFilters()">Apply</button>
+        </ng-container>
+
+        <select class="va-filter-select" (change)="onInstructorFilterChange($event)">
+          <option value="">All Instructors</option>
+          <option *ngFor="let name of uniqueInstructors" [value]="name">{{ name }}</option>
+        </select>
+
+        <button class="va-filter-clear-btn" (click)="clearFilters()"
+          *ngIf="folderDateFilter !== 'all' || folderInstructorFilter !== ''">
+          ✕ Clear
+        </button>
+
+        <span class="va-filter-count">{{ filteredFolders.length }} of {{ folders.length }} folders</span>
+
+      </div>
+
+      <!-- Table -->
+      <div class="va-table-wrapper">
+        <table class="va-table">
+          <thead>
+            <tr>
+              <th>Folder / Video Name</th>
+              <th>Summary</th>
+              <th>Q&amp;A</th>
+              <th>Audio</th>
+              <th>Shorts</th>
+              <th>Phase 1</th>
+              <th>Processed At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let folder of paginatedFolders">
+              <td class="va-folder-name">{{ folder.day_folder_name }}</td>
+
+              <td>
+                <span class="va-badge" [ngClass]="folder.summary_exists ? 'badge-yes' : 'badge-no'">
+                  {{ folder.summary_exists ? '✓ Done' : '✗ Missing' }}
+                </span>
+              </td>
+
+              <td>
+                <span class="va-badge" [ngClass]="folder.qa_exists ? 'badge-yes' : 'badge-no'">
+                  {{ folder.qa_exists ? '✓ Done' : '✗ Missing' }}
+                </span>
+              </td>
+
+              <td>
+                <span class="va-badge" [ngClass]="folder.audio_exists ? 'badge-yes' : 'badge-no'">
+                  {{ folder.audio_exists ? '🔊 Done' : '✗ Missing' }}
+                </span>
+              </td>
+
+              <td>
+                <span class="va-badge" [ngClass]="folder.shorts_exists ? 'badge-yes' : 'badge-no'">
+                  {{ folder.shorts_exists ? '🎬 Done' : '✗ None' }}
+                </span>
+              </td>
+
+              <td>
+                <span class="va-badge" [ngClass]="folder.phase1_completed ? 'badge-yes' : 'badge-pending'">
+                  {{ folder.phase1_completed ? '✓ Complete' : '⏳ Pending' }}
+                </span>
+              </td>
+
+              <td class="va-date">
+                {{ folder.processed_at ? formatDate(folder.processed_at) : '—' }}
+              </td>
+
+              <!-- Actions -->
+              <td class="va-actions-cell">
+                <div class="va-actions">
+
+                  <!-- Generate Summary -->
+                  <div class="va-action-group">
+                    <button class="va-action-btn btn-summary"
+                      [disabled]="getActionState(folder.day_folder_name).summary === 'loading'"
+                      (click)="generateSummary(folder)">
+                      <span *ngIf="getActionState(folder.day_folder_name).summary !== 'loading'">📄 Summary</span>
+                      <span *ngIf="getActionState(folder.day_folder_name).summary === 'loading'" class="va-btn-loading">
+                        <span class="va-btn-spinner"></span> Generating...
+                      </span>
+                    </button>
+                    <span class="va-action-msg"
+                      *ngIf="getActionState(folder.day_folder_name).summaryMessage"
+                      [ngClass]="{
+                        'msg-success': getActionState(folder.day_folder_name).summary === 'success',
+                        'msg-error':   getActionState(folder.day_folder_name).summary === 'error',
+                        'msg-info':    getActionState(folder.day_folder_name).summary === 'already_exists'
+                      }">
+                      {{ getActionState(folder.day_folder_name).summaryMessage }}
+                    </span>
+                  </div>
+
+                  <!-- Generate Q&A -->
+                  <div class="va-action-group">
+                    <button class="va-action-btn btn-qa"
+                      [disabled]="getActionState(folder.day_folder_name).qa === 'loading'"
+                      (click)="generateQA(folder)">
+                      <span *ngIf="getActionState(folder.day_folder_name).qa !== 'loading'">❓ Q&amp;A</span>
+                      <span *ngIf="getActionState(folder.day_folder_name).qa === 'loading'" class="va-btn-loading">
+                        <span class="va-btn-spinner"></span> Generating...
+                      </span>
+                    </button>
+                    <span class="va-action-msg"
+                      *ngIf="getActionState(folder.day_folder_name).qaMessage"
+                      [ngClass]="{
+                        'msg-success': getActionState(folder.day_folder_name).qa === 'success',
+                        'msg-error':   getActionState(folder.day_folder_name).qa === 'error',
+                        'msg-info':    getActionState(folder.day_folder_name).qa === 'already_exists'
+                      }">
+                      {{ getActionState(folder.day_folder_name).qaMessage }}
+                    </span>
+                  </div>
+
+                  <!-- Generate Audio -->
+                  <div class="va-action-group">
+                    <button class="va-action-btn btn-audio"
+                      [disabled]="getActionState(folder.day_folder_name).audio === 'loading'"
+                      (click)="generateAudio(folder)">
+                      <span *ngIf="getActionState(folder.day_folder_name).audio !== 'loading'">🔊 Audio</span>
+                      <span *ngIf="getActionState(folder.day_folder_name).audio === 'loading'" class="va-btn-loading">
+                        <span class="va-btn-spinner"></span> Generating...
+                      </span>
+                    </button>
+                    <span class="va-action-msg"
+                      *ngIf="getActionState(folder.day_folder_name).audioMessage"
+                      [ngClass]="{
+                        'msg-success': getActionState(folder.day_folder_name).audio === 'success',
+                        'msg-error':   getActionState(folder.day_folder_name).audio === 'error',
+                        'msg-info':    getActionState(folder.day_folder_name).audio === 'already_exists'
+                      }">
+                      {{ getActionState(folder.day_folder_name).audioMessage }}
+                    </span>
+                  </div>
+
+                  <!-- Generate Shorts -->
+                  <div class="va-action-group">
+                    <button class="va-action-btn btn-shorts"
+                      [disabled]="getActionState(folder.day_folder_name).shorts === 'loading'"
+                      (click)="generateShorts(folder)">
+                      <span *ngIf="getActionState(folder.day_folder_name).shorts !== 'loading'">🎬 Shorts</span>
+                      <span *ngIf="getActionState(folder.day_folder_name).shorts === 'loading'" class="va-btn-loading">
+                        <span class="va-btn-spinner"></span> Generating...
+                      </span>
+                    </button>
+                    <span class="va-action-msg"
+                      *ngIf="getActionState(folder.day_folder_name).shortsMessage"
+                      [ngClass]="{
+                        'msg-success': getActionState(folder.day_folder_name).shorts === 'success',
+                        'msg-error':   getActionState(folder.day_folder_name).shorts === 'error',
+                        'msg-info':    getActionState(folder.day_folder_name).shorts === 'already_exists'
+                      }">
+                      {{ getActionState(folder.day_folder_name).shortsMessage }}
+                    </span>
+                  </div>
+
+                  <!-- View Content -->
+                  <div class="va-action-group">
+                    <button class="va-action-btn btn-view" (click)="loadContent(folder.day_folder_name)">
+                      👁 View
+                    </button>
+                  </div>
+
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="paginatedFolders.length === 0">
+              <td colspan="8" style="text-align:center; padding: 24px; color: #9ca3af; font-size: 13px;">
+                No folders match the current filters.
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="va-pagination">
+          <span class="va-page-info">
+            Page {{ foldersCurrentPage }} of {{ foldersTotalPages }}
+            <span style="margin-left: 8px; color: #9ca3af;">({{ filteredFolders.length }} results)</span>
+          </span>
+          <div class="va-page-btns">
+            <button class="va-page-btn" (click)="previousFoldersPage()" [disabled]="foldersCurrentPage === 1">← Prev</button>
+            <button class="va-page-btn" (click)="nextFoldersPage()" [disabled]="foldersCurrentPage === foldersTotalPages">Next →</button>
+          </div>
+        </div>
+
+      </div>
+
+    </ng-container>
+
+    <!-- Empty -->
+    <div class="va-empty" *ngIf="!isLoading && !error && folders.length === 0">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <p>No training folders found in SharePoint.</p>
+    </div>
+
+  </ng-container>
+
+  <!-- ==================== QUIZ RESULTS TAB ==================== -->
+  <ng-container *ngIf="activeTab === 'quiz'">
+
+    <!-- Loading -->
+    <div class="va-loading" *ngIf="isLoadingQuiz">
+      <div class="va-spinner"></div>
+      <p>Loading quiz results...</p>
+    </div>
+
+    <!-- Error -->
+    <div class="va-error" *ngIf="quizError && !isLoadingQuiz">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ quizError }}</span>
+    </div>
+
+    <!-- Table -->
+    <div class="va-table-wrapper" *ngIf="!isLoadingQuiz && !quizError && quizResults.length > 0">
+      <div *ngFor="let group of groupedQuizResults" class="va-quiz-group">
+        <div class="va-quiz-group-header" (click)="toggleEmail(group.email)">
+          <span>{{ group.email }}</span>
+          <span>{{ group.results.length }} attempt{{ group.results.length > 1 ? 's' : '' }}</span>
+          <span>{{ expandedEmails.has(group.email) ? '▲' : '▼' }}</span>
+        </div>
+        <table class="va-table" *ngIf="expandedEmails.has(group.email)">
+          <thead>
+            <tr><th>#</th><th>Topic</th><th>Score</th><th>Date Taken</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of group.results; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ r.topic }}</td>
+              <td>
+                <span class="va-badge" [ngClass]="(r.score / r.total_questions) >= 0.7 ? 'badge-yes' : 'badge-no'">
+                  {{ r.score }} / {{ r.total_questions }}
+                </span>
+              </td>
+              <td>{{ formatQuizDate(r.taken_at) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Empty -->
+    <div class="va-empty" *ngIf="!isLoadingQuiz && !quizError && quizResults.length === 0">
+      <p>No quiz results found.</p>
+    </div>
+
+  </ng-container>
+
+  <!-- ==================== CONTENT VIEWER TAB ==================== -->
+  <ng-container *ngIf="activeTab === 'content'">
+
+    <!-- Folder list (no folder selected) -->
+    <div *ngIf="!contentFolder">
+      <p class="va-content-pick">Select a session to inspect:</p>
+      <div class="va-folder-list">
+        <div *ngFor="let folder of folders" class="va-folder-item" (click)="loadContent(folder.day_folder_name)">
+          <span>📁 {{ folder.day_folder_name }}</span>
+          <span class="va-folder-arrow">→</span>
+        </div>
+        <div *ngIf="folders.length === 0" class="va-content-empty">
+          No folders available. Load the Videos tab first.
+        </div>
+      </div>
+    </div>
+
+    <!-- Folder content -->
+    <div *ngIf="contentFolder">
+
+      <!-- Header with back button -->
+      <div class="va-content-header">
+        <button class="va-back-btn" (click)="contentFolder = ''">← Back</button>
+        <h4 class="va-content-title">📁 {{ contentFolder }}</h4>
+      </div>
+
+      <div *ngIf="isLoadingContent" class="va-loading">
+        <div class="va-spinner"></div>
+        <p>Loading content...</p>
+      </div>
+
+      <!-- Summary -->
+      <div class="va-content-section">
+        <h5>📄 Summary</h5>
+        <div *ngIf="contentSummary" class="va-content-text">{{ contentSummary }}</div>
+        <div *ngIf="!contentSummary && !isLoadingContent" class="va-content-empty">No summary available.</div>
+      </div>
+
+      <!-- Q&A -->
+      <div class="va-content-section">
+        <h5>❓ Q&amp;A</h5>
+        <div *ngIf="contentQA" class="va-content-text">{{ contentQA }}</div>
+        <div *ngIf="!contentQA && !isLoadingContent" class="va-content-empty">No Q&amp;A available.</div>
+      </div>
+
+      <!-- Audio -->
+      <div class="va-content-section">
+        <h5>🔊 Audio Topics</h5>
+        <div *ngIf="contentAudioList.length === 0 && !isLoadingContent" class="va-content-empty">No audio files available.</div>
+        <div *ngFor="let audio of contentAudioList" class="va-audio-item">
+          <span class="va-audio-label">{{ audio.topic }}</span>
+          <audio controls [src]="audio.url" class="va-audio-player"></audio>
+        </div>
+      </div>
+
+      <!-- Shorts -->
+      <div class="va-content-section">
+        <h5>🎬 Shorts</h5>
+        <div *ngIf="contentShortsList.length === 0 && !isLoadingContent" class="va-content-empty">No shorts available.</div>
+        <div class="va-shorts-grid">
+          <div *ngFor="let short of contentShortsList" class="va-short-card">
+            <video [src]="short.url" controls preload="metadata" class="va-short-video"></video>
+            <div class="va-short-meta">
+              <span class="va-short-title">{{ short.title }}</span>
+              <span class="va-short-duration">{{ short.duration_seconds }}s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </ng-container>
+
+</div>

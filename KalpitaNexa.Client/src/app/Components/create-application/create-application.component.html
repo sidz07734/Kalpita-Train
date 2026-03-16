@@ -1,0 +1,64 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-container" [ngClass]="{'dark-theme': isDarkTheme}" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>{{ modalTitle }}</h2>
+      <button class="close-btn" (click)="closeModal()" [disabled]="isSubmitting">
+        <svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Application Name <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="form.application_name" placeholder="e.g. Customer Portal"
+          [disabled]="isSubmitting" pattern="^[a-zA-Z\s]+$"
+          title="Application name should only contain letters and spaces" #appNameInput="ngModel" required />
+        <small class="error-text" *ngIf="appNameInput.invalid && appNameInput.touched">
+          Application name should only contain letters and spaces (no numbers or special characters)
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label>Tenant <span class="required">*</span></label>
+        <div class="checkbox-dropdown" [class.open]="dropdownOpen">
+          <div class="selected-display" (click)="toggleDropdown()">
+            {{ getSelectedTenantNames() }}
+            <svg class="arrow" [class.rotated]="dropdownOpen" viewBox="0 0 24 24">
+              <path d="M7 10l5 5 5-5z" fill="currentColor" />
+            </svg>
+          </div>
+          <div class="dropdown-list" *ngIf="dropdownOpen">
+            <label class="checkbox-item" *ngFor="let tenant of tenants">
+              <input type="checkbox" [checked]="form.tenant_ids.includes(tenant.tenant_id)"
+                (change)="toggleTenant(tenant.tenant_id)" />
+              <span>{{ tenant.tenant_name }}</span>
+            </label>
+          </div>
+        </div>
+        <small class="tenant-hint" *ngIf="form.tenant_ids.length > 0">
+          {{ form.tenant_ids.length }} tenant(s) selected
+        </small>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel-btn" (click)="closeModal()" [disabled]="isSubmitting">
+        Cancel
+      </button>
+      <button class="submit-btn" (click)="submit()" [disabled]="isSubmitting || isLoading">
+        <span *ngIf="!isSubmitting">Save</span>
+        <span *ngIf="isSubmitting">
+          <div class="small-spinner"></div> Saving...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>

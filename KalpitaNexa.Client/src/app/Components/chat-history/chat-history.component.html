@@ -1,0 +1,551 @@
+<!-- chat-history.component.html -->
+<div class="question-manager-overlay" *ngIf="isOpen">
+  <div class="question-manager-container" [ngClass]="{'dark-theme': isDarkTheme}" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="question-manager-header">
+      <div class="header-left">
+        <div class="header-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 11H3M21 11h-6M12 11v6M12 5v6M12 17a6 6 0 100-12 6 6 0 000 12z" />
+          </svg>
+        </div>
+        <h2 class="header-title">
+          Prompt Manager
+          <span class="header-badge tenant-badge" *ngIf="tenantName">{{ tenantName }}</span>
+          <span class="header-badge app-badge" *ngIf="appName">{{ appName }}</span>
+        </h2>
+      </div>
+      <div class="header-actions">
+        <button *ngIf="selectedCategory !== 'approvals'" class="add-question-btn" (click)="addNewQuestion()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Prompt
+        </button>
+        <button class="close-btn" (click)="close.emit()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="question-manager-body">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <div class="sidebar-section">
+          <h3 class="section-title">My Chats</h3>
+          <ul class="category-list">
+            <li class="category-item" [ngClass]="{'active': selectedCategory === 'myhistory'}"
+              (click)="selectCategory('myhistory')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v10l4 2" />
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+              <span class="category-name">My Chat History</span>
+              <span class="category-count">{{getCategoryCount('myhistory')}}</span>
+            </li>
+            <li class="category-item" [ngClass]="{'active': selectedCategory === 'public'}"
+              (click)="selectCategory('public')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z">
+                </path>
+              </svg>
+              <span class="category-name">Public</span>
+              <span class="category-count">{{getCategoryCount('public')}}</span>
+            </li>
+            <li class="category-item" [ngClass]="{'active': selectedCategory === 'favorites'}"
+              (click)="selectCategory('favorites')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                </polygon>
+              </svg>
+              <span class="category-name">Favorites</span>
+              <span class="category-count">{{getCategoryCount('favorites')}}</span>
+            </li>
+            <li class="category-item" [ngClass]="{'active': selectedCategory === 'tags'}"
+              (click)="selectCategory('tags')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+              </svg>
+              <span class="category-name">Tags</span>
+              <span class="category-count">{{getCategoryCount('tags')}}</span>
+            </li>
+            <li *ngIf="isCurrentUserAdmin" class="category-item"
+              [ngClass]="{'active': selectedCategory === 'approvals'}" (click)="selectCategory('approvals')">
+
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+                <path
+                  d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3">
+                </path>
+
+              </svg>
+
+              <span class="category-name">Approvals</span>
+
+              <span class="category-count">{{categoryCounts.approvals}}</span>
+
+            </li>
+            <li class="category-item disabled">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span class="category-name">Summary</span>
+              <span class="category-count">{{getCategoryCount('summary')}}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Tags Section -->
+        <!-- <div class="sidebar-section">
+          <h3 class="section-title">Popular Tags</h3>
+          <ul class="tag-list">
+            <li class="tag-item" *ngFor="let tag of popularTags" (click)="selectTag(tag.name)"
+              [ngClass]="{'active': selectedTag === tag.name}">
+              <span class="tag-hash">#</span>
+              <span class="tag-name">{{tag.name}}</span>
+              <span class="tag-count">{{tag.count}}</span>
+            </li>
+          </ul>
+        </div> -->
+
+        <!-- Pagination for All Messages View -->
+        <div class="sidebar-section pagination-section" *ngIf="isAllMessagesView && totalPages > 1">
+          <div class="pagination-controls">
+            <button class="pagination-btn" (click)="previousPage()" [disabled]="currentPage === 0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <span class="pagination-info">{{currentPageDisplay}} / {{totalPages}}</span>
+            <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Content Header -->
+        <div class="content-header">
+          <div class="content-title-section">
+            <h3 class="content-title">{{getContentTitle()}}</h3>
+            <p class="content-subtitle">{{getContentSubtitle()}}</p>
+          </div>
+
+          <!-- Search and Filter -->
+          <div class="search-filter-section">
+            <div class="search-box">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input type="text" class="search-input" placeholder="Search Chats..." [(ngModel)]="searchQuery"
+                (input)="onSearchChange()" />
+            </div>
+
+            <select class="category-filter" [(ngModel)]="dateFilter" (change)="onFilterChange()">
+              <option value="all">All Time</option>
+              <option value="lastWeek">Last 7 Days</option>
+              <option value="lastMonth">Last 30 Days</option>
+              <option value="last6Months">Last 6 Months</option>
+              <option value="lastYear">Last Year</option>
+              <option value="custom">Custom Range</option>
+            </select>
+
+          </div>
+
+
+          <div class="custom-date-filter" *ngIf="dateFilter === 'custom'">
+
+    
+    <!-- 2. Add (click) stop propagation to the child groups so clicking the inputs doesn't clear them -->
+    <div class="date-input-group" (click)="$event.stopPropagation()">
+        <label for="startDate">From:</label>
+        <input type="date" id="startDate" [(ngModel)]="customStartDate" [max]="todayStr">
+    </div>
+
+    <div class="date-input-group" (click)="$event.stopPropagation()">
+        <label for="endDate">To:</label>
+        <input type="date" id="endDate" [(ngModel)]="customEndDate" [max]="todayStr">
+    </div>
+
+    <!-- 3. Add stop propagation to the button too -->
+    <button class="apply-btn" (click)="$event.stopPropagation(); applyCustomDateFilter()"
+              [disabled]="!isDateRangeValid()">
+              Apply
+            </button>
+</div>
+        </div>
+
+
+        <div class="admin-approval-section" *ngIf="selectedCategory === 'approvals'">
+          <div *ngIf="!isLoading && pendingApprovals.length > 0; else noApprovals">
+            <div class="approval-card" *ngFor="let item of filteredApprovals">
+              <p class="approval-question-text" [innerHTML]="highlightText(item.UserMessage)"></p>
+              <div class="approval-meta">
+                <span>Requested on {{ item.RequestDate | date:'dd-MM-yyyy hh:mm a' }}</span>
+              </div>
+              <div class="approval-actions">
+                <button class="approve-btn" (click)="approveRequest(item.ApprovalId, $event)">Approve</button>
+                <button class="reject-btn" (click)="rejectRequest(item.ApprovalId, $event)">Reject</button>
+              </div>
+            </div>
+          </div>
+          <ng-template #noApprovals>
+            <div class="empty-state" *ngIf="!isLoading && filteredApprovals.length === 0">
+              <div class="empty-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  opacity="0.3">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+              <h4>No Chats found</h4>
+              <p>{{getEmptyStateMessage()}}</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" *ngIf="error">
+          <div class="error-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </div>
+          <p>{{error}}</p>
+        </div>
+
+        <!-- Questions List -->
+        <div class="questions-list" *ngIf="selectedCategory !== 'approvals' && !error">
+          <!-- Loading State -->
+          <div class="loading-state" *ngIf="isLoading">
+            <div class="loading-spinner"></div>
+            <p>Loading Chats...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="!isLoading && filteredQuestions.length === 0">
+            <div class="empty-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                opacity="0.3">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h4>No Chats found</h4>
+            <p>{{getEmptyStateMessage()}}</p>
+          </div>
+
+          <!-- Question Cards -->
+          <div class="question-card" 
+     *ngFor="let question of filteredQuestions" 
+     (dblclick)="selectQuestion(question)"
+     title="Double-click to use this prompt">
+            <div class="question-header">
+              <h4 class="question-title" [innerHTML]="highlightText(question.question)"></h4>
+              <!-- <div class="question-actions">
+                <span class="visibility-badge" [ngClass]="question.visibility">
+                  {{question.visibility === 'public' ? 'Public' : 'Private'}}
+                </span>
+                <span class="action-btn favorite-btn" [ngClass]="{'active': question.is_favorited}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    [ngClass]="{'filled': question.is_favorited}">
+                    <polygon
+                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                    </polygon>
+                  </svg>
+                </span>
+
+              </div> -->
+            </div>
+
+            <div class="question-meta">
+              <span class="posted-time">Posted {{formatTimeAgo(question.timestamp)}}</span>
+              <!-- Show who posted the question in public view -->
+              <span class="user-indicator" *ngIf="selectedCategory === 'public' && question.user_id">
+                • by {{question.user_id === userId ? 'You' : getUserDisplayName(question.user_id)}}
+              </span>
+            </div>
+
+            <div class="question-tags">
+              <span class="tag" *ngFor="let tag of question.tags">
+                #{{tag}}
+              </span>
+            </div>
+
+
+            <div class="response-section" *ngIf="selectedCategory === 'myhistory' && question.answer">
+              <button class="response-toggle-btn" (click)="toggleResponse(question, $event)">
+                <svg class="toggle-icon" [class.rotated]="question.isExpanded" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+                <span>View Response</span>
+                <span class="response-length">{{getResponsePreview(question.answer)}}</span>
+              </button>
+
+              <div class="response-content" *ngIf="question.isExpanded" [@expandCollapse]>
+                <div class="response-text" [innerHTML]="highlightText(question.answer)"></div>
+              </div>
+            </div>
+
+            <div class="question-footer">
+              <div class="action-buttons">
+                <!-- <button class="text-btn" (click)="toggleVisibility(question, $event)">
+                  {{ question.visibility === 'private' ? 'Make Public' : 'Make Private' }}
+                </button> -->
+                <button class="text-btn make-private-btn" *ngIf="question.visibility === 'public'"
+                  (click)="toggleVisibility(question, $event)">
+
+                  Make Private
+
+                </button>
+
+                <button class="text-btn make-public-btn"
+  *ngIf="question.visibility === 'private' && (question.public_approval_status === 'NotApplicable' || question.public_approval_status === 'Rejected' || !question.public_approval_status)"
+  (click)="toggleVisibility(question, $event)">
+  Make Public
+</button>
+
+                <span class="pending-badge" *ngIf="question.public_approval_status === 'Pending'">
+  Pending Approval
+</span>
+
+
+                <button class="text-btn pin-btn" (click)="togglePin(question, $event)">
+                  {{question.is_favorited ? 'Remove from Favorites' : 'Add to Favorites'}}
+                </button>
+                <button class="text-btn edit-btn" (click)="editQuestion(question, $event)"
+                  *ngIf="!isAllMessagesView || question.user_id === userId">Edit</button>
+                <button class="text-btn delete-btn" (click)="deleteQuestion(question, $event)"
+                  *ngIf="!isAllMessagesView || question.user_id === userId">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pre-generated Questions Section -->
+        <div class="pregenerated-section" *ngIf="showPregenerated && pregeneratedQuestions.length > 0">
+          <div class="section-header">
+            <h4>Pre-generated Questions</h4>
+            <span class="pregenerated-badge">Pre-generated</span>
+          </div>
+          <div class="pregenerated-list">
+            <div class="pregenerated-card" *ngFor="let question of pregeneratedQuestions">
+              <h5>{{question.question}}</h5>
+              <div class="pregenerated-actions">
+                <button class="use-btn" (click)="usePregenerated(question)">Use This Question</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Edit Message Dialog -->
+  <div class="edit-dialog-overlay" *ngIf="showEditDialog">
+    <div class="edit-dialog" (click)="$event.stopPropagation()">
+      <div class="edit-dialog-header">
+        <h3>Edit Question</h3>
+        <button class="close-btn" (click)="cancelEdit()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="edit-dialog-body">
+        <label for="edit-message">Your Prompt:</label>
+        <textarea id="edit-message" class="edit-textarea" [(ngModel)]="editingMessage"
+          placeholder="Enter your prompt..." rows="4"></textarea>
+
+        <div class="edit-info">
+          <p>Tags will be automatically extracted from your question.</p>
+        </div>
+      </div>
+
+      <div class="edit-dialog-footer">
+        <button class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+        <button class="save-btn" (click)="saveEdit()" [disabled]="!editingMessage.trim()">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Delete Confirmation Dialog -->
+  <div class="delete-dialog-overlay" *ngIf="showDeleteConfirmDialog">
+    <div class="delete-dialog" (click)="$event.stopPropagation()">
+      <div class="delete-dialog-header">
+        <div class="delete-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h3>Confirm Deletion</h3>
+      </div>
+
+      <div class="delete-dialog-body">
+        <p>Are you sure you want to delete this prompt? This action cannot be undone.</p>
+      </div>
+
+      <div class="delete-dialog-footer">
+        <button class="cancel-btn" (click)="cancelDelete()">Cancel</button>
+        <!-- <button class="confirm-delete-btn" (click)="confirmDelete()">Delete</button> -->
+        <button class="confirm-delete-btn" (click)="confirmDelete()" [disabled]="isDeleting">
+          <ng-container *ngIf="!isDeleting">Delete</ng-container>
+          <ng-container *ngIf="isDeleting">
+            <span class="saving-spinner"></span>
+            Deleting...
+          </ng-container>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="add-question-dialog-overlay" *ngIf="showAddQuestionDialog">
+    <div class="add-question-dialog" (click)="$event.stopPropagation()" [ngClass]="{'dark-theme': isDarkTheme}">
+      <div class="add-question-header">
+        <h3>Add New Prompt</h3>
+        <button class="close-btn" (click)="cancelAddQuestion()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+
+
+
+      <div class="add-question-body">
+        <!-- Question Input with Card-like Design -->
+        <div class="new-question-card">
+          <div class="new-question-header">
+            <textarea class="new-question-input" [(ngModel)]="newQuestionText" placeholder="Enter your question here..."
+              rows="3" (input)="updateCharacterCount()">
+          </textarea>
+
+            <!-- <div class="new-question-actions">
+          
+              <button class="visibility-toggle" (click)="toggleNewQuestionVisibility()">
+                <span class="visibility-badge" [ngClass]="newQuestionVisibility">
+                  {{newQuestionVisibility === 'public' ? 'Public' : 'Private'}}
+                </span>
+              </button>
+
+           
+              <button class="action-btn favorite-btn" [ngClass]="{'active': newQuestionFavorited}"
+                (click)="toggleNewQuestionFavorite()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  [ngClass]="{'filled': newQuestionFavorited}">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                  </polygon>
+                </svg>
+              </button>
+
+            
+              <button class="action-menu-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="1"></circle>
+                  <circle cx="12" cy="5" r="1"></circle>
+                  <circle cx="12" cy="19" r="1"></circle>
+                </svg>
+              </button>
+            </div> -->
+          </div>
+
+
+          <div class="new-question-meta">
+            <span class="posted-time">Posted now</span>
+            <span class="character-counter" [class.warning]="newQuestionText.length > 900">
+              {{newQuestionText.length}}/1000
+            </span>
+          </div>
+
+          <div class="new-question-tags" *ngIf="detectedTags.length > 0">
+            <span class="tag" *ngFor="let tag of detectedTags">
+              #{{tag}}
+            </span>
+          </div>
+
+
+          <div class="new-question-footer">
+            <div class="action-buttons">
+              <button class="text-btn" (click)="toggleNewQuestionVisibility()">
+                {{newQuestionVisibility === 'public' ? 'Make Private' : 'Make Public'}}
+              </button>
+              <button class="text-btn" (click)="toggleNewQuestionFavorite()">
+                {{newQuestionFavorited ? 'Remove from Favorites' : 'Add to Favorites'}}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="add-info-minimal">
+          <p><strong>💡 Tip:</strong> Use hashtags like #probability to automatically tag your question.</p>
+        </div>
+      </div>
+
+      <div class="add-question-footer">
+        <button class="cancel-btn" (click)="cancelAddQuestion()">Cancel</button>
+        <button class="submit-btn" (click)="submitNewQuestion()" [disabled]="!newQuestionText.trim() || isSaving">
+          <span *ngIf="!isSaving">Add</span>
+          <span *ngIf="isSaving">
+            <span class="saving-spinner"></span>
+            Adding...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Success Toast Notification -->
+  <div class="toast-notification" [ngClass]="{'show': showSuccessToast}">
+    <div class="toast-content success">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>{{ successMessage }}</span>
+    </div>
+  </div>
+
+  <!-- Error Toast Notification -->
+  <div class="toast-notification" [ngClass]="{'show': showErrorToast}">
+    <div class="toast-content error">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{errorMessage}}</span>
+    </div>
+  </div>
+
+</div>

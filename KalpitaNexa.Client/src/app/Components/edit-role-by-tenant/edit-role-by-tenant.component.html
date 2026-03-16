@@ -1,0 +1,90 @@
+<!-- edit-role-by-tenant.component.html -->
+<div class="modal-overlay">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Edit Role</h3>
+      <button type="button" class="modal-close-btn" (click)="closeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form [formGroup]="editRoleForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="roleName" class="form-label">Role Name <span class="required">*</span></label>
+          <input
+            id="roleName"
+            type="text"
+            class="form-input"
+            formControlName="roleName"
+            placeholder="Enter role name"
+          />
+          <div *ngIf="editRoleForm.get('roleName')?.invalid && editRoleForm.get('roleName')?.touched"
+               class="error-message">
+            Role name is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Features <span class="required">*</span></label>
+          <div class="multi-select-container">
+            <button type="button" class="multi-select-trigger" (click)="toggleFeaturesDropdown()">
+              <span *ngIf="selectedFeaturesCount === 0">Select features...</span>
+              <span *ngIf="selectedFeaturesCount > 0">{{ selectedFeaturesCount }} feature(s) selected</span>
+              <svg class="dropdown-arrow" [class.open]="isFeaturesDropdownOpen" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </button>
+<div class="dropdown-panel" *ngIf="isFeaturesDropdownOpen">
+  <div *ngFor="let feature of featuresList; trackBy: trackByFeatureId" class="dropdown-item">
+    <label class="feature-checkbox" [attr.for]="'feature-' + feature.id">
+      <!-- Force re-render with *ngIf -->
+      <input
+        *ngIf="isFeatureSelected(feature.id)"
+        type="checkbox"
+        [id]="'feature-' + feature.id"
+        [value]="feature.id"
+        checked
+        (change)="onFeatureChange($event)"
+      />
+      <input
+        *ngIf="!isFeatureSelected(feature.id)"
+        type="checkbox"
+        [id]="'feature-' + feature.id"
+        [value]="feature.id"
+        (change)="onFeatureChange($event)"
+      />
+      <span class="checkmark"></span>
+      <span class="feature-name">{{ feature.name }}</span>
+    </label>
+  </div>
+  <div *ngIf="featuresList.length === 0" class="dropdown-empty">
+    No features available
+  </div>
+</div>
+          </div>
+          <div *ngIf="editRoleForm.get('features')?.invalid && editRoleForm.get('features')?.touched"
+               class="error-message">
+            Select at least one feature
+          </div>
+        </div>
+
+        <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+        <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isSubmitting">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting || editRoleForm.invalid">
+            <span *ngIf="isSubmitting">Saving...</span>
+            <span *ngIf="!isSubmitting">Save</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

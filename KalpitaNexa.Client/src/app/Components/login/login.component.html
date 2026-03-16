@@ -1,0 +1,167 @@
+<div *ngIf="isCheckingTeams || isSsoAuthenticating" class="sso-loading-container"
+  [ngClass]="{'dark-theme': isDarkTheme}">
+  <div class="spinner"></div>
+  <p class="authenticating-text">Authenticating...</p>
+</div>
+<div *ngIf="!isCheckingTeams && !isSsoAuthenticating" class="login-container" [ngClass]="{'dark-theme': isDarkTheme}">
+  <!-- Dynamic Title based on the current view -->
+  <h4 class="form-title">
+    {{ currentView === 'login' ? 'Login' : 'Reset Password' }}
+  </h4>
+
+  <!-- Switch container to swap out forms -->
+  <div [ngSwitch]="currentView">
+
+    <!-- ======================= LOGIN VIEW ======================= -->
+    <div *ngSwitchCase="'login'">
+      <div *ngIf="loginError" class="error-message">{{ loginError }}</div>
+
+      <!-- Add #loginForm="ngForm" to enable form validation -->
+
+      <form #loginForm="ngForm" (ngSubmit)="onSubmit(loginForm)">
+
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" [(ngModel)]="email" #emailField="ngModel" required email>
+          <div *ngIf="(submitted || emailField.touched) && emailField.invalid" class="validation-error">
+            <div *ngIf="emailField.errors?.['required']">Email is required.</div>
+            <div *ngIf="emailField.errors?.['email']">Please enter a valid email address.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <!-- Add validation: required, minlength, and a complex pattern -->
+          <input type="password" id="password" name="password" [(ngModel)]="password" #passwordField="ngModel" required
+            minlength="8" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$">
+          <!-- Detailed Validation Messages -->
+          <div *ngIf="(submitted || passwordField.touched) && passwordField.invalid" class="validation-error">
+            <div *ngIf="passwordField.errors?.['required']">Password is required.</div>
+            <div *ngIf="passwordField.errors?.['minlength']">Password must be at least 8 characters long.</div>
+            <div *ngIf="passwordField.errors?.['pattern']">Must contain an uppercase letter, a lowercase letter, a
+              number, and a special character (@$!%*?&).</div>
+          </div>
+        </div>
+
+        <div class="login-actions">
+          <button type="submit" [disabled]="!loginForm.valid || isLoggingIn">
+            <span *ngIf="isLoggingIn" class="spinner"></span>
+            {{ isLoggingIn ? 'Logging in...' : 'Login' }}
+          </button>
+
+          <button type="button" class="cancel-btn" (click)="onCancel(loginForm)">Cancel</button>
+        </div>
+
+        <div class="form-group" style="text-align: center; margin-top: 15px;">
+          <a href="#" (click)="setView('forgotPassword', $event)" class="forgot-link">Forgot Password?</a>
+        </div>
+      </form>
+
+
+      <!-- SSO Divider and Button -->
+      <div class="sso-divider">
+        <span>OR</span>
+      </div>
+      <!-- <button type="button" class="sso-microsoft-btn" (click)="loginWithMicrosoft()">
+    <img src="assets/sso-microsoft.png" alt="Microsoft Logo">
+    Sign in with Microsoft
+  </button> -->
+      <button type="button" class="sso-microsoft-btn" (click)="loginWithMicrosoft()" [disabled]="isSsoAuthenticating">
+        <!-- Show this when NOT authenticating -->
+        <ng-container *ngIf="!isSsoAuthenticating">
+          <img src="assets/sso-microsoft.png" alt="Microsoft Logo">
+          Sign in with Microsoft
+        </ng-container>
+
+        <!-- Show this WHEN authenticating -->
+        <ng-container *ngIf="isSsoAuthenticating">
+          <span class="spinner"></span>
+          Authenticating...
+        </ng-container>
+      </button>
+    </div>
+
+    <!-- ======================= FORGOT PASSWORD VIEW (Enter Email) ======================= -->
+    <div *ngSwitchCase="'forgotPassword'">
+      <p class="form-instruction">Enter your email and we'll send you an OTP to reset your password.</p>
+
+      <div *ngIf="otpError" class="error-message">{{ otpError }}</div>
+      <div *ngIf="otpMessage" class="success-message">{{ otpMessage }}</div>
+
+      <form #forgotForm="ngForm" (ngSubmit)="handleSendOtp(forgotForm)">
+        <div class="form-group">
+          <label for="forgot-email">Email:</label>
+
+          <input type="email" id="forgot-email" name="forgot-email" [(ngModel)]="forgotEmail"
+            #forgotEmailField="ngModel" required email>
+
+          <div *ngIf="(forgotForm.submitted || forgotEmailField.touched) && forgotEmailField.invalid"
+            class="validation-error">
+            <div *ngIf="forgotEmailField.errors?.['required']">Email is required.</div>
+            <div *ngIf="forgotEmailField.errors?.['email']">Please enter a valid email format (e.g., user@example.com).
+            </div>
+          </div>
+        </div>
+
+        <div class="login-actions">
+          <button type="submit" [disabled]="isOtpSending || forgotForm.invalid">
+            {{ isOtpSending ? 'Sending...' : 'Send OTP' }}
+          </button>
+          <button type="button" class="cancel-btn" (click)="onCancel()">Cancel</button>
+        </div>
+        <a href="#" (click)="setView('login', $event)" class="back-link">Back to Login</a>
+      </form>
+    </div>
+
+    <!-- ======================= RESET PASSWORD VIEW (Enter OTP & New Password) ======================= -->
+    <div *ngSwitchCase="'resetPassword'">
+      <p class="form-instruction">An OTP has been sent to <strong>{{ forgotEmail }}</strong>. Enter it below to set a
+        new password.</p>
+      <div *ngIf="otpError" class="error-message">{{ otpError }}</div>
+      <form #resetForm="ngForm" (ngSubmit)="handleResetPassword(resetForm)">
+        <div class="form-group">
+          <label for="otp">OTP Code:</label>
+          <input type="text" id="otp" name="otp" [(ngModel)]="otp" required maxlength="6" autocomplete="one-time-code">
+        </div>
+        <div class="form-group">
+          <label for="new-password">New Password:</label>
+          <input type="password" id="new-password" name="newPassword" [(ngModel)]="newPassword"
+            #newPasswordField="ngModel" required minlength="8"
+            pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$">
+
+          <div *ngIf="(newPasswordField.touched) && newPasswordField.invalid" class="validation-error">
+            <div *ngIf="newPasswordField.errors?.['required']">Password is required.</div>
+            <div *ngIf="newPasswordField.errors?.['minlength']">Password must be at least 8 characters.</div>
+            <div *ngIf="newPasswordField.errors?.['pattern']">
+              Must contain uppercase, lowercase, number, and special character.
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="confirm-password">Confirm New Password:</label>
+          <input type="password" id="confirm-password" name="confirmPassword" [(ngModel)]="confirmPassword" required>
+          <div *ngIf="newPassword !== confirmPassword && confirmPassword" class="validation-error">
+            Passwords do not match.
+          </div>
+        </div>
+        <div class="login-actions">
+          <button type="submit" [disabled]="isResetting">
+            {{ isResetting ? 'Resetting...' : 'Reset Password' }}
+          </button>
+        </div>
+        <a href="#" (click)="setView('login', $event)" class="back-link">Back to Login</a>
+      </form>
+
+    </div>
+
+    <!-- ======================= SUCCESS VIEW ======================= -->
+    <div *ngSwitchCase="'success'">
+      <div class="success-message">{{ resetMessage }}</div>
+      <p class="form-instruction">You can now log in with your new password.</p>
+      <button type="button" (click)="setView('login', $event)" style="width: 100%;">
+        Back to Login
+      </button>
+    </div>
+
+  </div>
+</div>

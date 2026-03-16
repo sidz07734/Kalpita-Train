@@ -1,0 +1,91 @@
+.maximized-chart-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.maximized-chart-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  /* --- CHANGED: Force the modal to be large --- */
+  width: 85vw;
+  height: 85vh;
+  max-width: 1400px;
+  min-height: 500px;
+  overflow-y: auto; 
+  overflow-x: hidden;
+  
+  /* --- CHANGED: Use flexbox so the chart can stretch inside --- */
+  display: flex;
+  flex-direction: column;
+}
+
+.maximized-chart {
+  width: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* CRITICAL: Stops infinite stretching */
+  margin-top: 25px; /* Adds space so the close button doesn't overlap the chart title */
+  min-height: 700px; 
+  margin-top: 25px;
+  padding-bottom: 20px; 
+}
+/* --- ADDED: Forces the Angular app-chart tag to fill the new large space --- */
+::ng-deep .maximized-chart app-chart {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.close-btn {
+ position: absolute;
+  top: 0px; /* Moved slightly so it looks neat */
+  right: 5px;
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  z-index: 10; /* Ensures it stays clickable above the chart */
+}
+
+.close-btn:hover {
+  background: #dc2626;
+}
+
+/* Dark theme styles */
+.dark-theme .maximized-chart-container {
+  background: #1f2937;
+}
+
+.dark-theme .close-btn {
+  background: #b91c1c;
+}
+
+.dark-theme .close-btn:hover {
+  background: #991b1b;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
